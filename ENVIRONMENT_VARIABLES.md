@@ -28,11 +28,12 @@ CRON_SECRET=your_random_secret_string
 - Generate a random string (e.g., `openssl rand -base64 32`)
 - If not set, cron endpoints are publicly accessible
 
-### Site Configuration (Future Use)
+### Site Configuration (For OG Images)
 ```
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
-- Used for OG image generation (when re-enabled)
+- Used for OG image generation in public profiles
+- Auto-detects Vercel URL if not set
 - Defaults to `http://localhost:3000` in development
 
 ## Setting Environment Variables in Vercel

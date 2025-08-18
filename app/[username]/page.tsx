@@ -29,12 +29,14 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   const title = `${user.username} - reachoutto.me`
   const description = user.bio || `Check out ${user.username}'s links on reachoutto.me`
   
-  // Temporarily disable OG image generation to fix deployment
-  // TODO: Re-enable after fixing deployment issues
-  // const ogImageUrl = new URL('/api/og', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
-  // ogImageUrl.searchParams.set('username', user.username)
-  // if (user.bio) ogImageUrl.searchParams.set('bio', user.bio)
-  // if (user.avatar_url) ogImageUrl.searchParams.set('avatar', user.avatar_url)
+  // Generate OG image URL
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  
+  const ogImageUrl = new URL('/api/og', baseUrl)
+  ogImageUrl.searchParams.set('username', user.username)
+  if (user.bio) ogImageUrl.searchParams.set('bio', user.bio)
+  if (user.avatar_url) ogImageUrl.searchParams.set('avatar', user.avatar_url)
 
   return {
     title,
@@ -43,22 +45,20 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
       title,
       description,
       type: "profile",
-      // Temporarily disabled OG image
-      // images: [
-      //   {
-      //     url: ogImageUrl.toString(),
-      //     width: 1200,
-      //     height: 630,
-      //     alt: `${user.username}'s profile`,
-      //   },
-      // ],
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${user.username}'s profile`,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      // Temporarily disabled OG image
-      // images: [ogImageUrl.toString()],
+      images: [ogImageUrl.toString()],
     },
   }
 }
