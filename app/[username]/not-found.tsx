@@ -32,12 +32,12 @@ export default function NotFound() {
               </div>
               <CardTitle className="text-2xl">User Not Found</CardTitle>
               <CardDescription>
-                This profile doesn't exist or has been removed.
+                This profile doesn&apos;t exist or has been removed.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                The user you're looking for might have:
+                The user you&apos;re looking for might have:
               </p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Changed their username</li>

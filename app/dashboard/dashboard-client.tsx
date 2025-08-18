@@ -18,8 +18,7 @@ import {
   User as UserIcon, 
   Plus, 
   Trash2, 
-  GripVertical, 
-  ExternalLink,
+  GripVertical,
   LogOut,
   Eye,
   Settings,
@@ -49,7 +48,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import image from "next/image"
+
 
 interface SortableLinkProps {
   link: LinkType
@@ -656,7 +655,7 @@ export default function DashboardClient({ user, profile, initialLinks }: Dashboa
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <LinkIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No links added yet. Click "Add Link" to get started!</p>
+                  <p>No links added yet. Click &quot;Add Link&quot; to get started!</p>
                 </div>
               )}
             </CardContent>

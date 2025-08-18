@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import LinkCard from "@/components/link-card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { BuyMeCoffeeButton } from "@/components/buy-me-coffee-button"
-import { Link as LinkIcon, ExternalLink, Share2, Check } from "lucide-react"
+import { Link as LinkIcon, Share2, Check } from "lucide-react"
 import type { User, Link as LinkType } from "@/lib/types/database"
 
 interface PublicProfileProps {
