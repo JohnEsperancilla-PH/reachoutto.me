@@ -33,29 +33,26 @@ export default function Home() {
       <main className="container mx-auto px-4 md:px-6">
         {/* Hero Section */}
         <section className="text-center space-y-6 sm:space-y-8 py-12 sm:py-16 lg:py-20">
-          <div className="space-y-4 sm:space-y-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-              Your{" "}
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                digital identity
-              </span>
+          <div className="space-y-6 sm:space-y-8">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
+              One Link to
               <br className="hidden sm:block" />
-              {" "}in one link
+              {" "}
+              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Rule Them All
+              </span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
-              Create a beautiful, customizable landing page that showcases all your important links. 
-              Perfect for social media bios, business cards, and everywhere you need to share multiple links.
-            </p>
+            <div className="space-y-4">
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
+                Stop cluttering your bio with multiple links. Create a stunning, customizable landing page 
+                that brings together all your social media, portfolio, and important links in one place.
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4">
             <Link href="/auth" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6">
-                Create Your Page
-              </Button>
-            </Link>
-            <Link href="/johndev" className="w-full sm:w-auto text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="ghost" size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6">
-                View Demo →
+              <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 bg-primary hover:bg-primary/90">
+                Get Your Free Page
               </Button>
             </Link>
           </div>
@@ -63,69 +60,76 @@ export default function Home() {
 
         {/* Features Section */}
         <section className="py-12 sm:py-16 lg:py-20">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Why choose reachoutto.me?</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to create a professional link-in-bio page
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
+              Everything You Need to
+              <br className="hidden sm:block" />
+              {" "}
+              <span className="bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent">
+                Stand Out Online
+              </span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
+              Powerful features that make reachoutto.me the best choice for your digital presence
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            <Card className="border-2 hover:border-primary/20 transition-all duration-200 hover:shadow-lg">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+            <Card className="group border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <Zap className="h-8 w-8 text-primary mb-3" />
-                <CardTitle className="text-lg sm:text-xl">Lightning Fast</CardTitle>
+                <Zap className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                <CardTitle className="text-lg sm:text-xl">Beautiful & Fast</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Built with Next.js and optimized for speed. Your page loads instantly.
+                  Modern, clean design that loads instantly. Make a great first impression, every time.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-all duration-200 hover:shadow-lg">
+            <Card className="group border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <Smartphone className="h-8 w-8 text-primary mb-3" />
-                <CardTitle className="text-lg sm:text-xl">Mobile First</CardTitle>
+                <Smartphone className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                <CardTitle className="text-lg sm:text-xl">Perfect on All Devices</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Perfectly responsive design that looks great on any device.
+                  Responsive design that looks stunning on phones, tablets, and desktops.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-all duration-200 hover:shadow-lg">
+            <Card className="group border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <Shield className="h-8 w-8 text-primary mb-3" />
-                <CardTitle className="text-lg sm:text-xl">Secure & Private</CardTitle>
+                <Shield className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                <CardTitle className="text-lg sm:text-xl">Enterprise Security</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Your data is protected with enterprise-grade security.
+                  Bank-grade encryption and security. Your data is safe with us.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-all duration-200 hover:shadow-lg">
+            <Card className="group border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <Users className="h-8 w-8 text-primary mb-3" />
-                <CardTitle className="text-lg sm:text-xl">Easy to Use</CardTitle>
+                <Users className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                <CardTitle className="text-lg sm:text-xl">Drag & Drop Easy</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Simple drag-and-drop interface to organize your links.
+                  No coding needed. Just drag, drop, and customize your links in seconds.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-all duration-200 hover:shadow-lg">
+            <Card className="group border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <Globe className="h-8 w-8 text-primary mb-3" />
-                <CardTitle className="text-lg sm:text-xl">Custom Domain</CardTitle>
+                <Globe className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                <CardTitle className="text-lg sm:text-xl">Your Brand, Your Domain</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Use your own domain or get a free reachoutto.me subdomain.
+                  Use your own domain or get a free reachoutto.me profile. The choice is yours.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-all duration-200 hover:shadow-lg">
+            <Card className="group border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <LinkIcon className="h-8 w-8 text-primary mb-3" />
-                <CardTitle className="text-lg sm:text-xl">Unlimited Links</CardTitle>
+                <LinkIcon className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                <CardTitle className="text-lg sm:text-xl">Unlimited Everything</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Add as many links as you need, organize them your way.
+                  No limits on links, clicks, or customization. Everything you need, completely free.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -133,18 +137,39 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="text-center space-y-4 sm:space-y-6 bg-muted/30 rounded-2xl p-6 sm:p-8 lg:p-12 mx-4 sm:mx-0">
-          <h2 className="text-2xl sm:text-3xl font-bold">Ready to get started?</h2>
-          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Join thousands of creators, entrepreneurs, and professionals who trust reachoutto.me 
-            to showcase their digital presence.
-          </p>
-          <div className="pt-2">
-            <Link href="/auth" className="inline-block w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6">
-                Create Your Free Account
+        <section className="text-center space-y-6 sm:space-y-8 bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl p-8 sm:p-10 lg:p-16 mx-4 sm:mx-0 border-2 border-primary/10">
+          <div className="space-y-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+              Ready to Level Up Your
+              <br className="hidden sm:block" />
+              {" "}
+              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Online Presence?
+              </span>
+            </h2>
+            <div className="space-y-3">
+              <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                Create your stunning link page in less than 2 minutes.
+                No credit card, no commitment.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <Link href="/auth" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 bg-primary hover:bg-primary/90">
+                Get Your Free Page
               </Button>
             </Link>
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                <span>2-min setup</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span>Free forever</span>
+              </div>
+            </div>
           </div>
         </section>
       </main>
