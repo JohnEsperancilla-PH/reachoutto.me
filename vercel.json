@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "app/**/*.{js,ts,tsx}": {
+      "runtime": "@vercel/node@18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api|_next|_static|favicon.ico).*)",
+      "destination": "/"
+    }
+  ]
+}
