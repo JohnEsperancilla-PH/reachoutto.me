@@ -19,7 +19,10 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://reachoutto.me'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  ),
   openGraph: {
     title: "reachoutto.me - Your Digital Identity in One Link",
     description: "Create a beautiful, customizable landing page that showcases all your important links. Perfect for social media bios, business cards, and everywhere you need to share multiple links.",

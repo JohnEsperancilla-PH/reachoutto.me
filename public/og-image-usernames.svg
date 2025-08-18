@@ -4,19 +4,20 @@
       .cls-1 {
         font-size: 100px;
         font-weight: 800;
-      }
-
-      .cls-1, .cls-2 {
         fill: #ffffff;
         font-family: "Bricolage Grotesque";
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
       }
 
       .cls-2 {
         font-size: 50px;
         font-weight: 500;
+        fill: #e2e8f0;
+        font-family: "Bricolage Grotesque";
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
       }
     </style>
   </defs>
-  <text id="insert_name" data-name="insert name" class="cls-1" x="345.635" y="320.726">[username]</text>
-  <text id="reachoutto.me_username_" data-name="reachoutto.me/[username]" class="cls-2" x="318.635" y="379.726">reachoutto.me/[username]</text>
+  <text id="insert_name" data-name="insert name" class="cls-1" x="600" y="290" text-anchor="middle">[username]</text>
+  <text id="reachoutto.me_username_" data-name="reachoutto.me/[username]" class="cls-2" x="600" y="370" text-anchor="middle">reachoutto.me/[username]</text>
 </svg>

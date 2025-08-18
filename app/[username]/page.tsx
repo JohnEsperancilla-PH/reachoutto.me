@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { createPublicClient } from "@/lib/supabase/public"
 import PublicProfile from "./public-profile"
 import type { Metadata } from "next"
+import { generateProfileOGImage } from "@/lib/utils/og-image"
 
 // Force dynamic rendering to prevent build-time errors with Supabase
 export const dynamic = 'force-dynamic'
@@ -28,15 +29,11 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 
   const title = `${user.username} - reachoutto.me`
   const description = user.bio || `Check out ${user.username}'s links on reachoutto.me`
-  
-  // Generate OG image URL
+
+  // Get base URL for OG image
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  
-  const ogImageUrl = new URL('/api/og', baseUrl)
-  ogImageUrl.searchParams.set('username', encodeURIComponent(user.username))
-  if (user.bio) ogImageUrl.searchParams.set('bio', encodeURIComponent(user.bio))
-  if (user.avatar_url) ogImageUrl.searchParams.set('avatar', encodeURIComponent(user.avatar_url))
+  const ogImageUrl = `${baseUrl}/api/og?username=${encodeURIComponent(user.username)}`
 
   return {
     title,
@@ -47,7 +44,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
       type: "profile",
       images: [
         {
-          url: ogImageUrl.toString(),
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: `${user.username}'s profile`,
@@ -58,7 +55,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
       card: 'summary_large_image',
       title,
       description,
-      images: [ogImageUrl.toString()],
+      images: [ogImageUrl],
     },
   }
 }
