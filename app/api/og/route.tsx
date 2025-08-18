@@ -5,10 +5,15 @@ export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   try {
-    const username = request.nextUrl.searchParams.get('username')
+    // Correctly get the username from search params
+    const searchParams = request.nextUrl.searchParams
+    const username = searchParams.get('username')
 
     if (!username) {
-      return new Response('Missing username', { status: 400 })
+      return new Response('Missing username', { 
+        status: 400,
+        headers: { 'Content-Type': 'text/plain' }
+      })
     }
 
     // Very simple image generation to test
