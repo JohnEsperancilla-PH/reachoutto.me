@@ -34,7 +34,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="text-center space-y-6 sm:space-y-8 py-12 sm:py-16 lg:py-24">
           <div className="space-y-6 sm:space-y-8">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-tight">
+            <h1 className="text-6xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-none">
               One Link to
               <br className="hidden sm:block" />
               {" "}
