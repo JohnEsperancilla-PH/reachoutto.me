@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import PublicProfile from "./public-profile"
 import type { Metadata } from "next"
 
@@ -12,7 +12,7 @@ interface ProfilePageProps {
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   const { data: user } = await supabase
     .from("users")
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { username } = await params
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   // Get user profile
   const { data: user, error: userError } = await supabase
@@ -75,18 +75,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .single()
 
   if (!user || userError) {
-    notFound()
-  }
-
-  // Double-check that the user still exists in auth.users
-  // This handles cases where user was deleted from auth but not from users table
-  const { data: authUser } = await supabase
-    .from("users")
-    .select("id")
-    .eq("id", user.id)
-    .single()
-
-  if (!authUser) {
     notFound()
   }
 

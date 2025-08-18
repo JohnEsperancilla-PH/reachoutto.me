@@ -35,11 +35,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Check if this is a public profile route (username route)
+  const isPublicProfile = request.nextUrl.pathname.match(/^\/[a-zA-Z0-9_-]+$/)
+  
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/auth') &&
     !request.nextUrl.pathname.startsWith('/api') &&
-    request.nextUrl.pathname !== '/'
+    !request.nextUrl.pathname.startsWith('/admin/login') &&
+    request.nextUrl.pathname !== '/' &&
+    !isPublicProfile
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
