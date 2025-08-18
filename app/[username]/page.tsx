@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server"
 import PublicProfile from "./public-profile"
 import type { Metadata } from "next"
 
+// Force dynamic rendering to prevent build-time errors with Supabase
+export const dynamic = 'force-dynamic'
+
 interface ProfilePageProps {
   params: Promise<{ username: string }>
 }
