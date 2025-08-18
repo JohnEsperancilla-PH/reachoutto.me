@@ -1,21 +1,33 @@
-import { ImageResponse } from '@vercel/og'
 import { NextRequest } from 'next/server'
 
-export const runtime = 'edge'
+// Temporarily disable edge runtime to fix deployment
+// export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const username = searchParams.get('username')
-    const name = searchParams.get('name') || username
-    const bio = searchParams.get('bio')
-    const avatar = searchParams.get('avatar')
 
     if (!username) {
       return new Response('Missing username parameter', { status: 400 })
     }
 
-    // We'll use system fonts for better reliability
+    // Temporarily return a simple response to fix deployment
+    return new Response(
+      `OG Image for ${username} - Feature temporarily disabled during deployment`,
+      { 
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain'
+        }
+      }
+    )
+
+    // TODO: Re-enable image generation after fixing deployment
+    /*
+    const name = searchParams.get('name') || username
+    const bio = searchParams.get('bio')
+    const avatar = searchParams.get('avatar')
 
     return new ImageResponse(
       (
@@ -173,6 +185,7 @@ export async function GET(request: NextRequest) {
         height: 630,
       }
     )
+    */
   } catch (e: any) {
     console.log(`${e.message}`)
     return new Response(`Failed to generate the image`, {
