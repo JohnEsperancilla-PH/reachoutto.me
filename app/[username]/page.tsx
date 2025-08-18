@@ -34,9 +34,9 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   
   const ogImageUrl = new URL('/api/og', baseUrl)
-  ogImageUrl.searchParams.set('username', user.username)
-  if (user.bio) ogImageUrl.searchParams.set('bio', user.bio)
-  if (user.avatar_url) ogImageUrl.searchParams.set('avatar', user.avatar_url)
+  ogImageUrl.searchParams.set('username', encodeURIComponent(user.username))
+  if (user.bio) ogImageUrl.searchParams.set('bio', encodeURIComponent(user.bio))
+  if (user.avatar_url) ogImageUrl.searchParams.set('avatar', encodeURIComponent(user.avatar_url))
 
   return {
     title,

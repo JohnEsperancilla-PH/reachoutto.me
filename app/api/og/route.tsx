@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams, origin } = new URL(request.url)
     const username = (searchParams.get('username') || '').trim()
+    const bio = searchParams.get('bio')
+    const avatarUrl = searchParams.get('avatar')
+
     if (!username) {
       return new Response('Missing username parameter', { status: 400 })
     }
@@ -60,9 +63,7 @@ export async function GET(request: NextRequest) {
         width: 1200, 
         height: 630,
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, s-maxage=0, stale-while-revalidate=0',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
         }
       }
     )

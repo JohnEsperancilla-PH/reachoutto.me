@@ -27,12 +27,21 @@ export const metadata: Metadata = {
     siteName: "reachoutto.me",
     type: "website",
     locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "reachoutto.me - Your Digital Identity in One Link",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "reachoutto.me - Your Digital Identity in One Link",
     description: "Create a beautiful, customizable landing page that showcases all your important links. Perfect for social media bios, business cards, and everywhere you need to share multiple links.",
     creator: "@reachoutto",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
