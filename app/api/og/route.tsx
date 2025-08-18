@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
         /<style>/,
         `<style>${ff500}${ff800}`
       )
-      // Force visible colors for text
-      .replace(/\.cls-1,\s*\.cls-2\s*{[^}]*}/s, (block) => {
+      // Force visible colors for text (avoid /s flag; use [\s\S]*)
+      .replace(/\.cls-1,\s*\.cls-2\s*{[\s\S]*?}/, (block) => {
         // switch default fill to white; we'll override cls-2 below
         return block.replace(/fill:\s*#[0-9a-fA-F]{3,6}/, 'fill: #ffffff')
       })
@@ -56,7 +56,15 @@ export async function GET(request: NextRequest) {
           <img src={dataUri} width={1200} height={630} style={{ position: 'relative', display: 'block' }} />
         </div>
       ),
-      { width: 1200, height: 630 }
+      { 
+        width: 1200, 
+        height: 630,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, s-maxage=0, stale-while-revalidate=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     )
   } catch (e: any) {
     console.log(`${e.message}`)
