@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      .cls-1 {
+        font-size: 100px;
+        font-weight: 800;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #1a1a1a;
+        font-family: "Bricolage Grotesque";
+      }
+
+      .cls-2 {
+        font-size: 50px;
+        font-weight: 500;
+      }
+    </style>
+  </defs>
+  <text id="insert_name" data-name="insert name" class="cls-1" x="345.635" y="320.726">[username]</text>
+  <text id="reachoutto.me_username_" data-name="reachoutto.me/[username]" class="cls-2" x="318.635" y="379.726">reachoutto.me/[username]</text>
+</svg>
