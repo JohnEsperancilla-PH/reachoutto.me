@@ -24,12 +24,27 @@ export async function GET(request: NextRequest) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#000000',
-            backgroundImage: 'radial-gradient(circle at 25% 25%, #1a1a1a 0%, #000000 50%)',
             position: 'relative',
             fontFamily: 'system-ui, -apple-system, sans-serif',
           }}
         >
+          {/* Solid background layer to avoid transparent/white output in some viewers */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: '#000',
+            }}
+          />
+          {/* Optional subtle gradient on top of solid black */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(circle at 25% 25%, #1a1a1a 0%, #000 50%)',
+              opacity: 0.9,
+            }}
+          />
           {/* Decorative elements */}
           <div
             style={{
@@ -65,6 +80,7 @@ export async function GET(request: NextRequest) {
               justifyContent: 'center',
               textAlign: 'center',
               gap: '32px',
+              position: 'relative',
             }}
           >
             {/* Avatar */}
@@ -73,8 +89,8 @@ export async function GET(request: NextRequest) {
                 width: '120px',
                 height: '120px',
                 borderRadius: '50%',
-                background: avatar 
-                  ? `url(${avatar})` 
+                background: avatar
+                  ? `url(${avatar})`
                   : 'linear-gradient(45deg, #6366f1, #8b5cf6)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
@@ -87,7 +103,7 @@ export async function GET(request: NextRequest) {
                 color: '#ffffff',
               }}
             >
-              {!avatar && username.charAt(0).toUpperCase()}
+              {!avatar && (username?.charAt(0).toUpperCase() || 'U')}
             </div>
 
             {/* Username */}
