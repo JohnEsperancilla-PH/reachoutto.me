@@ -5,9 +5,9 @@ export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { username: string } }
+  request: NextRequest
 ) {
+  const { username } = request.nextUrl.searchParams;
   if (!params.username) {
     return new Response('Missing username parameter', { 
       status: 400,
