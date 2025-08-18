@@ -32,9 +32,9 @@ export default function Home() {
 
       <main className="container mx-auto px-4 md:px-6">
         {/* Hero Section */}
-        <section className="text-center space-y-6 sm:space-y-8 py-12 sm:py-16 lg:py-20">
+        <section className="text-center space-y-6 sm:space-y-8 py-12 sm:py-16 lg:py-24">
           <div className="space-y-6 sm:space-y-8">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-tight">
               One Link to
               <br className="hidden sm:block" />
               {" "}
