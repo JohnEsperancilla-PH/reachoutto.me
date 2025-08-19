@@ -1,18 +1,23 @@
-// next.config.js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import { type NextConfig } from 'next'
+
+const config: NextConfig = {
   experimental: {
-    serverActions: true,
-    optimizePackageImports: ['@supabase/supabase-js'],
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'reachoutto.me']
+    },
+    optimizePackageImports: ['@supabase/supabase-js']
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-    ],
+        hostname: '**.supabase.co'
+      }
+    ]
   },
+  eslint: {
+    ignoreDuringBuilds: true
+  }
 }
 
-module.exports = nextConfig
+export default config

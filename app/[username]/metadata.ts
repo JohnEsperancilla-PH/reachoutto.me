@@ -1,25 +1,22 @@
-// app/[username]/layout.tsx
-import type { Metadata, ResolvingMetadata } from 'next'
+import type { Metadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
-import { notFound } from 'next/navigation'
 
-export async function generateMetadata(
-  props: { params: { username: string } },
-  _parent?: ResolvingMetadata
-): Promise<Metadata> {
-  const { params } = props
+export async function generateUserMetadata(username: string): Promise<Metadata> {
   const supabase = createPublicClient()
   const { data: user } = await supabase
     .from('users')
     .select('username, avatar_url')
-    .eq('username', params.username)
+    .eq('username', username)
     .single()
 
   if (!user) {
-    notFound()
+    return {
+      title: 'User Not Found | reachoutto.me',
+      description: 'This user profile does not exist.',
+    }
   }
 
-  const ogImageUrl = new URL('/api/og', 'https://reachoutto.me')
+  const ogImageUrl = new URL('/api/og', process.env.NEXT_PUBLIC_SITE_URL)
   ogImageUrl.searchParams.set('type', 'profile')
   ogImageUrl.searchParams.set('username', user.username)
   if (user.avatar_url) {
@@ -48,12 +45,4 @@ export async function generateMetadata(
       images: [ogImageUrl.toString()],
     },
   }
-}
-
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return <>{children}</>
 }

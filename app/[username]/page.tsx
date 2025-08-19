@@ -7,12 +7,12 @@ import { generateProfileOGImage } from "@/lib/utils/og-image"
 // Force dynamic rendering to prevent build-time errors with Supabase
 export const dynamic = 'force-dynamic'
 
-interface PageProps {
-  params: { username: string }
+interface ProfilePageProps {
+  params: Promise<{ username: string }>
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { username } = params
+export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
+  const { username } = await params
   const supabase = createPublicClient()
 
   const { data: user } = await supabase
@@ -60,8 +60,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function ProfilePage({ params }: PageProps) {
-  const { username } = params
+export default async function ProfilePage({ params }: ProfilePageProps) {
+  const { username } = await params
   const supabase = createPublicClient()
 
   // Get user profile
