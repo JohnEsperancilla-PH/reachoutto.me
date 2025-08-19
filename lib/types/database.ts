@@ -8,6 +8,8 @@ export interface Database {
           bio: string | null
           avatar_url: string | null
           is_admin: boolean
+          show_links: boolean
+          show_portfolio: boolean
           created_at: string
         }
         Insert: {
@@ -16,6 +18,8 @@ export interface Database {
           bio?: string | null
           avatar_url?: string | null
           is_admin?: boolean
+          show_links?: boolean
+          show_portfolio?: boolean
           created_at?: string
         }
         Update: {
@@ -24,6 +28,8 @@ export interface Database {
           bio?: string | null
           avatar_url?: string | null
           is_admin?: boolean
+          show_links?: boolean
+          show_portfolio?: boolean
           created_at?: string
         }
       }
@@ -44,6 +50,8 @@ export interface Database {
           title: string
           url: string
           position: number
+          icon?: string
+          color?: string
           created_at?: string
         }
         Update: {
@@ -51,6 +59,40 @@ export interface Database {
           user_id?: string
           title?: string
           url?: string
+          position?: number
+          icon?: string
+          color?: string
+          created_at?: string
+        }
+      }
+      portfolio_items: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          image_url: string | null
+          project_url: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          image_url?: string | null
+          project_url?: string | null
+          position: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          image_url?: string | null
+          project_url?: string | null
           position?: number
           created_at?: string
         }
@@ -73,3 +115,4 @@ export interface Database {
 
 export type User = Database['public']['Tables']['users']['Row']
 export type Link = Database['public']['Tables']['links']['Row']
+export type PortfolioItem = Database['public']['Tables']['portfolio_items']['Row']

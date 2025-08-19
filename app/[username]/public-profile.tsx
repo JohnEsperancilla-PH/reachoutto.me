@@ -1,22 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import LinkCard from "@/components/link-card"
+import PortfolioCard from "@/components/portfolio-card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { BuyMeCoffeeButton } from "@/components/buy-me-coffee-button"
-import { Link as LinkIcon, Share2, Check } from "lucide-react"
-import type { User, Link as LinkType } from "@/lib/types/database"
+import { Link as LinkIcon, Share2, Check, Coffee, Briefcase } from "lucide-react"
+import type { User, Link as LinkType, PortfolioItem } from "@/lib/types/database"
 
 interface PublicProfileProps {
   user: User
   links: LinkType[]
+  portfolioItems: PortfolioItem[]
 }
 
-export default function PublicProfile({ user, links }: PublicProfileProps) {
+export default function PublicProfile({ user, links, portfolioItems }: PublicProfileProps) {
   const [copied, setCopied] = useState(false)
+  const [activeSection, setActiveSection] = useState<'links' | 'portfolio'>('links')
+
+  // Determine which sections are available
+  const hasLinks = user.show_links && links.length > 0
+  const hasPortfolio = user.show_portfolio && portfolioItems.length > 0
+  
+  // Set default active section based on what's available
+  useEffect(() => {
+    if (hasLinks) {
+      setActiveSection('links')
+    } else if (hasPortfolio) {
+      setActiveSection('portfolio')
+    }
+  }, [hasLinks, hasPortfolio])
 
   const handleShare = async () => {
     const url = window.location.href
@@ -59,7 +74,6 @@ export default function PublicProfile({ user, links }: PublicProfileProps) {
         <div className="max-w-sm sm:max-w-md mx-auto space-y-6 sm:space-y-8">
           {/* Top Controls */}
           <div className="flex justify-end items-center gap-2">
-            <BuyMeCoffeeButton />
             <Button
               variant="outline"
               size="sm"
@@ -107,34 +121,103 @@ export default function PublicProfile({ user, links }: PublicProfileProps) {
             </div>
           </div>
 
-          {/* Links Section */}
-          <div className="space-y-3 sm:space-y-4">
-            {links.length > 0 ? (
-              links.map((link) => (
-                <LinkCard
-                  key={link.id}
-                  link={link}
-                  onClick={() => handleLinkClick(link.url)}
-                  className="active:scale-[0.98]"
-                />
-              ))
-            ) : (
-              <div className="text-center py-8 sm:py-12 text-muted-foreground">
-                <LinkIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
-                <p className="text-sm sm:text-base">No links added yet</p>
+          {/* Content Section */}
+          <div className="space-y-6 sm:space-y-8">
+            {/* Section Toggle (only show if both sections are available) */}
+            {hasLinks && hasPortfolio && (
+              <div className="flex items-center justify-center">
+                <div className="flex items-center bg-muted rounded-full p-1 shadow-sm">
+                  <button
+                    onClick={() => setActiveSection('links')}
+                    className={`px-6 py-2.5 text-sm font-medium rounded-full transition-all ${
+                      activeSection === 'links'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Links
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('portfolio')}
+                    className={`px-6 py-2.5 text-sm font-medium rounded-full transition-all ${
+                      activeSection === 'portfolio'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Portfolio
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Links Content */}
+            {(activeSection === 'links' || (!hasPortfolio && hasLinks)) && (
+              <div className="space-y-3 sm:space-y-4">
+                {links.length > 0 ? (
+                  links.map((link) => (
+                    <LinkCard
+                      key={link.id}
+                      link={link}
+                      onClick={() => handleLinkClick(link.url)}
+                      className="active:scale-[0.98]"
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12 sm:py-16 text-muted-foreground">
+                    <LinkIcon className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-6 opacity-50" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No links added yet</p>
+                    <p className="text-sm sm:text-base">Check back later for updates!</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Portfolio Content */}
+            {(activeSection === 'portfolio' || (!hasLinks && hasPortfolio)) && (
+              <div className="space-y-6">
+                {portfolioItems.length > 0 ? (
+                  <div className="grid gap-6">
+                    {portfolioItems.map((item) => (
+                      <PortfolioCard
+                        key={item.id}
+                        item={item}
+                        className="active:scale-[0.98] max-w-md mx-auto w-full"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 sm:py-16 text-muted-foreground">
+                    <Briefcase className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-6 opacity-50" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No projects added yet</p>
+                    <p className="text-sm sm:text-base">Check back later for updates!</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Footer */}
           <div className="text-center pt-6 sm:pt-8">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              Create your own reachoutto.me
-            </Link>
+            <div className="flex items-center justify-center gap-3 text-xs sm:text-sm text-muted-foreground">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 hover:text-foreground transition-colors underline"
+              >
+                <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                Create your own reachoutto.me
+              </Link>
+              
+              <span className="text-muted-foreground/50">|</span>
+              
+              <button
+                onClick={() => window.open('https://www.buymeacoffee.com/johnesperancilla', '_blank')}
+                className="inline-flex items-center gap-2 hover:text-foreground transition-colors underline"
+              >
+                <Coffee className="h-3 w-3 sm:h-4 sm:w-4" />
+                Buy me a coffee
+              </button>
+            </div>
           </div>
         </div>
       </main>

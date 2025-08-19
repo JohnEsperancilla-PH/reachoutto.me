@@ -9,10 +9,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload"
+import { PortfolioImageUpload } from "@/components/portfolio-image-upload"
 import LinkCard from "@/components/link-card"
+import PortfolioCard from "@/components/portfolio-card"
 import { IconPicker } from "@/components/icon-picker"
 import { ColorPicker } from "@/components/color-picker"
 import { BuyMeCoffeeButton } from "@/components/buy-me-coffee-button"
+import { Switch } from "@/components/ui/switch"
 import { 
   Link as LinkIcon, 
   User as UserIcon, 
@@ -23,12 +26,16 @@ import {
   Eye,
   Settings,
   X,
-  Check
+  Check,
+  Briefcase,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { uploadPortfolioImage, deletePortfolioImage } from "@/lib/supabase/storage"
 import { useRouter } from "next/navigation"
 import type { User as AuthUser } from "@supabase/supabase-js"
-import type { User, Link as LinkType } from "@/lib/types/database"
+import type { User, Link as LinkType, PortfolioItem } from "@/lib/types/database"
 import {
   DndContext,
   closestCenter,
@@ -108,28 +115,41 @@ interface DashboardClientProps {
   user: AuthUser
   profile: User | null
   initialLinks: LinkType[]
+  initialPortfolioItems: PortfolioItem[]
 }
 
-export default function DashboardClient({ user, profile, initialLinks }: DashboardClientProps) {
+export default function DashboardClient({ user, profile, initialLinks, initialPortfolioItems }: DashboardClientProps) {
   const [mounted, setMounted] = React.useState(false)
   const [links, setLinks] = React.useState<LinkType[]>([])
+  const [portfolioItems, setPortfolioItems] = React.useState<PortfolioItem[]>([])
   const [username, setUsername] = React.useState("")
   const [bio, setBio] = React.useState("")
+  const [showLinks, setShowLinks] = React.useState(true)
+  const [showPortfolio, setShowPortfolio] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [editingLink, setEditingLink] = React.useState<LinkType | null>(null)
+  const [editingPortfolio, setEditingPortfolio] = React.useState<PortfolioItem | null>(null)
   const [linkTitle, setLinkTitle] = React.useState("")
   const [linkUrl, setLinkUrl] = React.useState("")
   const [linkIcon, setLinkIcon] = React.useState("Link")
   const [linkColor, setLinkColor] = React.useState("default")
   const [showAddLink, setShowAddLink] = React.useState(false)
+  const [portfolioTitle, setPortfolioTitle] = React.useState("")
+  const [portfolioDescription, setPortfolioDescription] = React.useState("")
+  const [portfolioImageUrl, setPortfolioImageUrl] = React.useState("")
+  const [portfolioProjectUrl, setPortfolioProjectUrl] = React.useState("")
+  const [showAddPortfolio, setShowAddPortfolio] = React.useState(false)
 
   // Initialize state after mount to prevent hydration mismatch
   React.useEffect(() => {
     setMounted(true)
     setLinks(initialLinks)
+    setPortfolioItems(initialPortfolioItems)
     setUsername(profile?.username || "")
     setBio(profile?.bio || "")
-  }, [initialLinks, profile])
+    setShowLinks(profile?.show_links ?? true)
+    setShowPortfolio(profile?.show_portfolio ?? false)
+  }, [initialLinks, initialPortfolioItems, profile])
   
   const router = useRouter()
   const supabase = createClient()
@@ -156,6 +176,8 @@ export default function DashboardClient({ user, profile, initialLinks }: Dashboa
           id: user.id,
           username: username,
           bio: bio,
+          show_links: showLinks,
+          show_portfolio: showPortfolio,
         })
 
       if (error) throw error
@@ -168,6 +190,19 @@ export default function DashboardClient({ user, profile, initialLinks }: Dashboa
       console.error("Error updating profile:", error.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSectionToggleUpdate = async (field: 'show_links' | 'show_portfolio', value: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ [field]: value })
+        .eq("id", user.id)
+
+      if (error) throw error
+    } catch (error: any) {
+      console.error("Error updating section visibility:", error.message)
     }
   }
 
@@ -336,6 +371,147 @@ export default function DashboardClient({ user, profile, initialLinks }: Dashboa
     setShowAddLink(false)
   }
 
+  // Portfolio management functions
+  const handleAddPortfolio = async () => {
+    if (!portfolioTitle.trim()) return
+
+    setLoading(true)
+    try {
+      const newPortfolioItem = {
+        user_id: user.id,
+        title: portfolioTitle,
+        description: portfolioDescription || null,
+        image_url: portfolioImageUrl || null,
+        project_url: portfolioProjectUrl || null,
+        position: portfolioItems.length,
+      }
+
+      const tempId = Date.now().toString()
+      const tempItem = { ...newPortfolioItem, id: tempId } as PortfolioItem
+      setPortfolioItems([...portfolioItems, tempItem])
+
+      const { data, error } = await supabase
+        .from("portfolio_items")
+        .insert(newPortfolioItem)
+        .select()
+        .single()
+
+      if (error) {
+        setPortfolioItems(portfolioItems)
+        throw error
+      }
+
+      setPortfolioItems(prevItems => prevItems.map(item => item.id === tempId ? data : item))
+      setPortfolioTitle("")
+      setPortfolioDescription("")
+      setPortfolioImageUrl("")
+      setPortfolioProjectUrl("")
+      setShowAddPortfolio(false)
+    } catch (error: any) {
+      console.error("Error adding portfolio item:", error.message)
+      alert('Failed to add portfolio item: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdatePortfolio = async (updatedItem: PortfolioItem) => {
+    setLoading(true)
+    try {
+      setPortfolioItems(portfolioItems.map(item => item.id === updatedItem.id ? updatedItem : item))
+
+      const { data, error } = await supabase
+        .from("portfolio_items")
+        .update({
+          title: updatedItem.title,
+          description: updatedItem.description,
+          image_url: updatedItem.image_url,
+          project_url: updatedItem.project_url,
+          position: updatedItem.position
+        })
+        .eq("id", updatedItem.id)
+        .select()
+        .single()
+
+      if (error) {
+        setPortfolioItems(portfolioItems)
+        throw error
+      }
+
+      setPortfolioItems(prevItems => prevItems.map(item => item.id === data.id ? data : item))
+    } catch (error: any) {
+      console.error("Error updating portfolio item:", error.message)
+      alert('Failed to update portfolio item: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditPortfolio = async () => {
+    if (!editingPortfolio || !portfolioTitle.trim()) return
+
+    setLoading(true)
+    try {
+      const updatedItem = {
+        ...editingPortfolio,
+        title: portfolioTitle,
+        description: portfolioDescription || null,
+        image_url: portfolioImageUrl || null,
+        project_url: portfolioProjectUrl || null,
+      }
+      await handleUpdatePortfolio(updatedItem)
+      cancelPortfolioEdit()
+    } catch (error: any) {
+      console.error("Error updating portfolio item:", error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeletePortfolio = async (id: string) => {
+    setLoading(true)
+    try {
+      // Find the item to get the image URL before deleting
+      const itemToDelete = portfolioItems.find(item => item.id === id)
+      
+      const { error } = await supabase
+        .from("portfolio_items")
+        .delete()
+        .eq("id", id)
+
+      if (error) throw error
+
+      // Delete the associated image if it exists
+      if (itemToDelete?.image_url) {
+        await deletePortfolioImage(itemToDelete.image_url)
+      }
+
+      setPortfolioItems(portfolioItems.filter(item => item.id !== id))
+    } catch (error: any) {
+      console.error("Error deleting portfolio item:", error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startEditPortfolio = (item: PortfolioItem) => {
+    setEditingPortfolio(item)
+    setPortfolioTitle(item.title)
+    setPortfolioDescription(item.description || "")
+    setPortfolioImageUrl(item.image_url || "")
+    setPortfolioProjectUrl(item.project_url || "")
+    setShowAddPortfolio(true)
+  }
+
+  const cancelPortfolioEdit = () => {
+    setEditingPortfolio(null)
+    setPortfolioTitle("")
+    setPortfolioDescription("")
+    setPortfolioImageUrl("")
+    setPortfolioProjectUrl("")
+    setShowAddPortfolio(false)
+  }
+
   // Don't render until after mount to prevent hydration mismatch
   if (!mounted) {
     return null
@@ -423,6 +599,57 @@ export default function DashboardClient({ user, profile, initialLinks }: Dashboa
                   placeholder="Tell people about yourself..."
                   className="min-h-[100px]"
                 />
+              </div>
+              
+              {/* Section Toggles */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-px bg-border flex-1" />
+                  <span className="text-xs text-muted-foreground font-medium px-3">SECTIONS</span>
+                  <div className="h-px bg-border flex-1" />
+                </div>
+                
+                <div className="grid gap-4">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <LinkIcon className="h-4 w-4" />
+                        <Label htmlFor="show-links" className="font-medium">Links Section</Label>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Show the links section on your public profile
+                      </p>
+                    </div>
+                    <Switch
+                      id="show-links"
+                      checked={showLinks}
+                      onCheckedChange={(value) => {
+                        setShowLinks(value)
+                        handleSectionToggleUpdate('show_links', value)
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        <Label htmlFor="show-portfolio" className="font-medium">Portfolio Section</Label>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Show the portfolio section on your public profile
+                      </p>
+                    </div>
+                    <Switch
+                      id="show-portfolio"
+                      checked={showPortfolio}
+                      onCheckedChange={(value) => {
+                        setShowPortfolio(value)
+                        handleSectionToggleUpdate('show_portfolio', value)
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
               <Button onClick={handleProfileUpdate} disabled={loading}>
                 {loading ? "Saving..." : "Save Profile"}
@@ -660,6 +887,224 @@ export default function DashboardClient({ user, profile, initialLinks }: Dashboa
               )}
             </CardContent>
           </Card>
+
+          {/* Portfolio Management */}
+          {showPortfolio && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5" />
+                      Your Portfolio
+                    </CardTitle>
+                    <CardDescription>
+                      Showcase your projects and work
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => setShowAddPortfolio(true)}
+                    disabled={showAddPortfolio}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Project
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Add/Edit Portfolio Form */}
+                {showAddPortfolio && (
+                  <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            {editingPortfolio ? (
+                              <>
+                                <Settings className="h-5 w-5" />
+                                Edit Project
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="h-5 w-5" />
+                                Add New Project
+                              </>
+                            )}
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            {editingPortfolio 
+                              ? "Update your project details"
+                              : "Add a new project to your portfolio"
+                            }
+                          </CardDescription>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={cancelPortfolioEdit}
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="portfolio-title" className="text-sm font-medium">
+                            Project Title
+                          </Label>
+                          <Input
+                            id="portfolio-title"
+                            value={portfolioTitle}
+                            onChange={(e) => setPortfolioTitle(e.target.value)}
+                            placeholder="e.g., My Amazing App, Website Redesign..."
+                            className="h-10"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="portfolio-description" className="text-sm font-medium">
+                            Description
+                          </Label>
+                          <Textarea
+                            id="portfolio-description"
+                            value={portfolioDescription}
+                            onChange={(e) => setPortfolioDescription(e.target.value)}
+                            placeholder="Describe your project, technologies used, challenges solved..."
+                            className="min-h-[80px]"
+                          />
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <PortfolioImageUpload
+                              userId={user.id}
+                              currentImageUrl={portfolioImageUrl}
+                              onImageUpdate={(url) => setPortfolioImageUrl(url || "")}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="portfolio-url" className="text-sm font-medium">
+                              Project URL (Optional)
+                            </Label>
+                            <Input
+                              id="portfolio-url"
+                              value={portfolioProjectUrl}
+                              onChange={(e) => setPortfolioProjectUrl(e.target.value)}
+                              placeholder="https://your-project.com"
+                              className="h-10"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preview */}
+                      {portfolioTitle.trim() && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-px bg-border flex-1" />
+                            <span className="text-xs text-muted-foreground font-medium px-3">PREVIEW</span>
+                            <div className="h-px bg-border flex-1" />
+                          </div>
+                          <div className="flex justify-center">
+                            <div className="w-full max-w-md">
+                              <PortfolioCard
+                                item={{
+                                  id: "preview",
+                                  user_id: "",
+                                  title: portfolioTitle || "Project Title",
+                                  description: portfolioDescription || null,
+                                  image_url: portfolioImageUrl || null,
+                                  project_url: portfolioProjectUrl || null,
+                                  position: 0,
+                                  created_at: new Date().toISOString(),
+                                }}
+                                className="pointer-events-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="text-xs text-muted-foreground">
+                          {!portfolioTitle.trim() ? (
+                            "Please add a project title to continue"
+                          ) : (
+                            "Ready to save your project!"
+                          )}
+                        </div>
+                        <div className="flex gap-3">
+                          <Button 
+                            variant="outline" 
+                            onClick={cancelPortfolioEdit}
+                            className="min-w-[80px]"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={editingPortfolio ? handleEditPortfolio : handleAddPortfolio}
+                            disabled={loading || !portfolioTitle.trim()}
+                            className="min-w-[120px]"
+                          >
+                            {loading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                Saving...
+                              </>
+                            ) : editingPortfolio ? (
+                              <>
+                                <Check className="h-4 w-4 mr-2" />
+                                Update Project
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Project
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Portfolio Grid */}
+                {portfolioItems.length > 0 ? (
+                  <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                    {portfolioItems.map((item) => (
+                      <div key={item.id} className="relative group max-w-md mx-auto w-full">
+                        <PortfolioCard
+                          item={item}
+                          onEdit={startEditPortfolio}
+                          showControls={true}
+                          isBeingEdited={editingPortfolio?.id === item.id}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleDeletePortfolio(item.id)}
+                          className="absolute top-3 right-3 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Briefcase className="h-16 w-16 mx-auto mb-6 opacity-50" />
+                    <p className="text-lg font-medium mb-2">No projects added yet</p>
+                    <p className="text-sm">Click &quot;Add Project&quot; to showcase your work!</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>

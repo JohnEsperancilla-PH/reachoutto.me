@@ -58,6 +58,69 @@ export async function uploadProfilePhoto(file: File, userId: string) {
   }
 }
 
+export async function uploadPortfolioImage(file: File, userId: string) {
+  const supabase = createClient()
+  
+  // Generate a unique file name with proper extension and timestamp
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const timestamp = Date.now()
+  const fileName = `portfolio-${timestamp}-${file.name.replace(/[^a-zA-Z0-9]/g, '-')}`
+  // Store files in a portfolio subfolder under user ID
+  const filePath = `${userId}/portfolio/${fileName}`
+
+  // Validate file size (1MB limit for portfolio images)
+  if (file.size > 1 * 1024 * 1024) {
+    throw new Error('Portfolio image file size must be less than 1MB')
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('File type must be JPEG, PNG, GIF, or WebP')
+  }
+
+  try {
+    // Upload the file
+    const { data, error: uploadError } = await supabase.storage
+      .from('profiles')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      })
+
+    if (uploadError) throw uploadError
+
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('profiles')
+      .getPublicUrl(filePath)
+
+    return publicUrl
+  } catch (error: any) {
+    console.error('Error uploading portfolio image:', error.message)
+    throw new Error(error.message)
+  }
+}
+
+export async function deletePortfolioImage(imageUrl: string) {
+  const supabase = createClient()
+
+  if (imageUrl) {
+    // Extract file path from URL
+    const filePath = imageUrl.split('profiles/')[1]
+    if (filePath) {
+      try {
+        // Delete the file
+        await supabase.storage
+          .from('profiles')
+          .remove([filePath])
+      } catch (error) {
+        console.error('Error deleting portfolio image:', error)
+      }
+    }
+  }
+}
+
 export async function deleteProfilePhoto(userId: string) {
   const supabase = createClient()
 

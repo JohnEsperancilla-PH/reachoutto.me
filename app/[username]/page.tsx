@@ -74,5 +74,18 @@ export default async function ProfilePage({ params }: { params: { username: stri
     .eq("user_id", user.id)
     .order("position")
 
-  return <PublicProfile user={user} links={links || []} />
+  // Get user portfolio items
+  const { data: portfolioItems } = await supabase
+    .from("portfolio_items")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("position")
+
+  return (
+    <PublicProfile 
+      user={user} 
+      links={links || []} 
+      portfolioItems={portfolioItems || []}
+    />
+  )
 }

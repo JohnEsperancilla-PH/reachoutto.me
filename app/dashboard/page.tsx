@@ -30,11 +30,19 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .order("position")
 
+  // Get user portfolio items
+  const { data: portfolioItems } = await supabase
+    .from("portfolio_items")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("position")
+
   return (
     <DashboardClient 
       user={user} 
       profile={profile} 
       initialLinks={links || []} 
+      initialPortfolioItems={portfolioItems || []}
     />
   )
 }
