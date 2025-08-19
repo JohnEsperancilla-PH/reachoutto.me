@@ -1,15 +1,20 @@
 import type { Metadata } from 'next'
-import { createPublicClient } from '@/lib/supabase/public'
+import { createEdgeClient } from '@/lib/supabase/edge'
 import { notFound } from 'next/navigation'
 
-type Props = {
-  params: { username: string }
+type LayoutProps = {
   children: React.ReactNode
+  params: { username: string }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+type MetadataProps = {
+  params: { username: string }
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export async function generateMetadata({ params }: MetadataProps): Promise<Metadata> {
   const username = params.username
-  const supabase = createPublicClient()
+  const supabase = createEdgeClient()
 
   // Fetch user data
   const { data: user } = await supabase
@@ -62,6 +67,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function Layout({ children }: Props) {
+export default function Layout({ children }: LayoutProps) {
   return <>{children}</>
 }

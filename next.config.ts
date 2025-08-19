@@ -1,21 +1,20 @@
-import type { NextConfig } from "next";
+import { type NextConfig } from 'next'
 
-const nextConfig: NextConfig = {
+const config: NextConfig = {
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'localhost:3001'],
+    },
+  },
   images: {
+    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
+        hostname: '**.supabase.co',
       },
     ],
   },
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
-};
+}
 
-export default nextConfig;
+export default config
