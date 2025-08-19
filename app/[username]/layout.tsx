@@ -1,13 +1,15 @@
-import { Metadata } from 'next'
+import { Metadata, ResolvingMetadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { notFound } from 'next/navigation'
 
-type MetadataProps = {
+type Props = {
   params: { username: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
 export async function generateMetadata(
-  { params }: MetadataProps
+  { params }: Props,
+  parent: ResolvingMetadata
 ): Promise<Metadata> {
   const supabase = createPublicClient()
   const { data: user } = await supabase
