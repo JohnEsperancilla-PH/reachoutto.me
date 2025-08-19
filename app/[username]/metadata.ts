@@ -16,7 +16,7 @@ export async function generateUserMetadata(username: string): Promise<Metadata> 
     }
   }
 
-  const ogImageUrl = new URL('/api/og', process.env.NEXT_PUBLIC_APP_URL)
+  const ogImageUrl = new URL('/api/og', process.env.NEXT_PUBLIC_SITE_URL)
   ogImageUrl.searchParams.set('type', 'profile')
   ogImageUrl.searchParams.set('username', user.username)
   if (user.avatar_url) {
