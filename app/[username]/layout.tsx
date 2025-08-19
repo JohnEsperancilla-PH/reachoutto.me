@@ -53,10 +53,12 @@ export async function generateMetadata(
 
 export default function UserLayout({
   children,
-  params,
 }: {
   children: React.ReactNode
-  params: { username: string }
 }) {
-  return children
+  return (
+    <div>
+      {children}
+    </div>
+  )
 }
