@@ -1,33 +1,47 @@
 import { ImageResponse } from 'next/og'
-import { createPublicClient } from '@/lib/supabase/public'
+import { NextRequest } from 'next/server'
+import { createEdgeClient } from '@/lib/supabase/edge'
 
 export const runtime = 'edge'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const username = searchParams.get('username') || 'test'
+
   try {
-    const { searchParams } = new URL(request.url)
-    const username = searchParams.get('username')
+    // Load the Bricolage Grotesque font
+    const fontData = await fetch(
+      new URL('../../../public/fonts/BricolageGrotesque_24pt-Bold.ttf', import.meta.url)
+    ).then((res) => res.arrayBuffer()).catch(() => null)
 
-    if (!username) {
-      return new Response('Username is required', { status: 400 })
-    }
-
-    // Fetch user data
-    const supabase = createPublicClient()
+    // Fetch user data including avatar_url
+    const supabase = createEdgeClient()
     const { data: user } = await supabase
       .from('users')
-      .select('username, bio, avatar_url')
+      .select('avatar_url')
       .eq('username', username)
       .single()
 
-    if (!user) {
-      return new Response('User not found', { status: 404 })
+    let profileImageData = null
+    if (user?.avatar_url) {
+      try {
+        // If avatar_url is a full URL, use it directly
+        if (user.avatar_url.startsWith('http')) {
+          profileImageData = await fetch(user.avatar_url).then(res => res.arrayBuffer())
+        } else {
+          // If avatar_url is just a file path, get the public URL from storage
+          const { data: { publicUrl } } = supabase.storage
+            .from('profiles')
+            .getPublicUrl(user.avatar_url)
+          
+          if (publicUrl) {
+            profileImageData = await fetch(publicUrl).then(res => res.arrayBuffer())
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch profile image:', e)
+      }
     }
-
-    // Load the font
-    const bricolageData = await fetch(
-      new URL('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600&display=swap')
-    ).then((res) => res.arrayBuffer())
 
     return new ImageResponse(
       (
@@ -39,92 +53,87 @@ export async function GET(request: Request) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#1a1a1a',
-            backgroundImage: 'radial-gradient(circle at 25px 25px, #333 2%, transparent 0%), radial-gradient(circle at 75px 75px, #333 2%, transparent 0%)',
-            backgroundSize: '100px 100px',
+            backgroundColor: 'white',
+            fontFamily: fontData ? 'Bricolage Grotesque' : 'system-ui, sans-serif',
+            padding: '60px',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              padding: '40px 60px',
-              borderRadius: '20px',
-              border: '1px solid #333',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
+          {/* Profile Image */}
+          {profileImageData ? (
+            <img
+              src={`data:image/jpeg;base64,${Buffer.from(profileImageData).toString('base64')}`}
+              style={{
+                width: 160,
+                height: 160,
+                borderRadius: 80,
+                objectFit: 'cover',
+                marginBottom: 20,
+                border: '4px solid #d1d5db',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 160,
+                height: 160,
+                borderRadius: 80,
+                backgroundColor: '#e5e7eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 20,
+                border: '4px solid #d1d5db',
+              }}
+            >
+              <div style={{ fontSize: 65, color: '#6b7280' }}>
+                {username.charAt(0).toUpperCase()}
+              </div>
+            </div>
+          )}
+
+          {/* @username */}
+          <h1 
+            style={{ 
+              fontSize: 80, 
+              color: 'black', 
+              margin: 0,
+              marginBottom: 10,
+              fontWeight: 800,
+              fontFamily: fontData ? 'Bricolage Grotesque' : 'system-ui, sans-serif',
             }}
           >
-            {user.avatar_url && (
-              <img
-                src={user.avatar_url}
-                alt={user.username}
-                width={120}
-                height={120}
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '60px',
-                  marginBottom: '20px',
-                  border: '3px solid #ffffff',
-                }}
-              />
-            )}
-            <div
-              style={{
-                fontSize: '48px',
-                fontWeight: '600',
-                color: '#ffffff',
-                marginBottom: '10px',
-                fontFamily: 'Bricolage Grotesque',
-              }}
-            >
-              {user.username}
-            </div>
-            {user.bio && (
-              <div
-                style={{
-                  fontSize: '24px',
-                  color: '#cccccc',
-                  textAlign: 'center',
-                  maxWidth: '600px',
-                  fontFamily: 'Bricolage Grotesque',
-                }}
-              >
-                {user.bio}
-              </div>
-            )}
-            <div
-              style={{
-                fontSize: '20px',
-                color: '#666666',
-                marginTop: '20px',
-                fontFamily: 'Bricolage Grotesque',
-              }}
-            >
-              reachoutto.me/{user.username}
-            </div>
-          </div>
+            @{username}
+          </h1>
+
+          {/* reachoutto.me/username */}
+          <p 
+            style={{ 
+              fontSize: 40, 
+              color: '#6b7280', 
+              margin: 0,
+              fontWeight: 500,
+              fontFamily: fontData ? 'Bricolage Grotesque' : 'system-ui, sans-serif',
+            }}
+          >
+            reachoutto.me/{username}
+          </p>
         </div>
       ),
       {
         width: 1200,
         height: 630,
-        fonts: [
+        fonts: fontData ? [
           {
             name: 'Bricolage Grotesque',
-            data: bricolageData,
+            data: fontData,
             style: 'normal',
+            weight: 700,
           },
-        ],
+        ] : [],
       }
     )
   } catch (e) {
-    console.error(e)
-    return new Response(`Failed to generate image`, {
-      status: 500,
-    })
+    console.error('OG Image generation error:', e)
+    return new Response('Failed to generate image', { status: 500 })
   }
 }
