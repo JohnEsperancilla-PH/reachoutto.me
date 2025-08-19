@@ -1,16 +1,12 @@
-import { Metadata, ResolvingMetadata } from 'next'
+import type { Metadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { notFound } from 'next/navigation'
 
-type Props = {
+export async function generateMetadata({
+  params,
+}: {
   params: { username: string }
-  searchParams: { [key: string]: string | string[] | undefined }
-}
-
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
+}): Promise<Metadata> {
   const supabase = createPublicClient()
   const { data: user } = await supabase
     .from('users')
@@ -53,14 +49,10 @@ export async function generateMetadata(
   }
 }
 
-export default function UserLayout({
-  children,
-}: {
+interface LayoutProps {
   children: React.ReactNode
-}) {
-  return (
-    <div>
-      {children}
-    </div>
-  )
+}
+
+export default function Layout({ children }: LayoutProps) {
+  return children
 }
