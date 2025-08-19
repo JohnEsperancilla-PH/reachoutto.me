@@ -45,7 +45,7 @@ export default function Home() {
             <div className="space-y-4">
               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
                 Stop cluttering your bio with multiple links. Create a stunning, customizable landing page 
-                that brings together all your social media, portfolio, and important links in one place.
+                that brings together all your social media, portfolio, and important links in one place. All for free!
               </p>
             </div>
           </div>
