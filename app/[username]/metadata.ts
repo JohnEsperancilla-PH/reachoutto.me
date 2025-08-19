@@ -5,7 +5,7 @@ export async function generateUserMetadata(username: string): Promise<Metadata> 
   const supabase = createPublicClient()
   const { data: user } = await supabase
     .from('users')
-    .select('username, avatar_url')
+    .select('username, bio, avatar_url')
     .eq('username', username)
     .single()
 
@@ -16,19 +16,22 @@ export async function generateUserMetadata(username: string): Promise<Metadata> 
     }
   }
 
-  const ogImageUrl = new URL('/api/og', process.env.NEXT_PUBLIC_SITE_URL)
-  ogImageUrl.searchParams.set('type', 'profile')
+  // Get base URL for OG image
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+  const ogImageUrl = new URL('/api/og', baseUrl)
   ogImageUrl.searchParams.set('username', user.username)
-  if (user.avatar_url) {
-    ogImageUrl.searchParams.set('avatar', user.avatar_url)
-  }
+
+  const title = `${user.username} | reachoutto.me`
+  const description = user.bio || `Check out ${user.username}'s links on reachoutto.me`
 
   return {
-    title: `${user.username} | reachoutto.me`,
-    description: `Check out ${user.username}'s links on reachoutto.me`,
+    title,
+    description,
     openGraph: {
-      title: `${user.username} | reachoutto.me`,
-      description: `Check out ${user.username}'s links on reachoutto.me`,
+      title,
+      description: description,
       images: [
         {
           url: ogImageUrl.toString(),
