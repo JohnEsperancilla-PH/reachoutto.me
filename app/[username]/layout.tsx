@@ -1,17 +1,17 @@
+import { Metadata } from 'next'
 import { generateUserMetadata } from './metadata'
 
-export const generateMetadata = async ({
-  params: { username },
-}: {
-  params: { username: string }
-}) => {
-  return generateUserMetadata(username)
+type Props = {
+  children: React.ReactNode
+  params: {
+    username: string
+  }
 }
 
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return <>{children}</>
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  return generateUserMetadata(props.params.username)
+}
+
+export default async function Layout(props: Props) {
+  return <>{props.children}</>
 }
