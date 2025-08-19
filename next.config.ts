@@ -1,13 +1,11 @@
-import { type NextConfig } from 'next'
-
-const config: NextConfig = {
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'localhost:3001'],
-    },
+    serverActions: true,
+    optimizePackageImports: ['@supabase/supabase-js'],
   },
   images: {
-    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -15,12 +13,6 @@ const config: NextConfig = {
       },
     ],
   },
-  eslint: {
-    ignoreDuringBuilds: true, // We'll handle ESLint separately
-  },
-  typescript: {
-    ignoreBuildErrors: false, // Keep type checking during build
-  },
 }
 
-export default config
+module.exports = nextConfig

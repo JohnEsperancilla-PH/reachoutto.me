@@ -1,5 +1,6 @@
+// app/[username]/layout.tsx
 import type { Metadata } from 'next'
-import { createEdgeClient } from '@/lib/supabase/edge'
+import { createPublicClient } from '@/lib/supabase/public'
 import { notFound } from 'next/navigation'
 
 export async function generateMetadata({
@@ -7,70 +8,52 @@ export async function generateMetadata({
 }: {
   params: { username: string }
 }): Promise<Metadata> {
-  const username = params.username
-  const supabase = createEdgeClient()
-
-  // Fetch user data
+  const supabase = createPublicClient()
   const { data: user } = await supabase
     .from('users')
-    .select('username')
-    .eq('username', username)
+    .select('username, avatar_url')
+    .eq('username', params.username)
     .single()
 
   if (!user) {
     notFound()
   }
 
-  const title = `${username} | reachoutto.me`
-  const description = `Connect with ${username} on reachoutto.me`
-  const ogImage = `/api/og/${encodeURIComponent(username)}`
+  const ogImageUrl = new URL('/api/og', 'https://reachoutto.me')
+  ogImageUrl.searchParams.set('type', 'profile')
+  ogImageUrl.searchParams.set('username', user.username)
+  if (user.avatar_url) {
+    ogImageUrl.searchParams.set('avatar', user.avatar_url)
+  }
 
   return {
-    title,
-    description,
+    title: `${user.username} | reachoutto.me`,
+    description: `Check out ${user.username}'s links on reachoutto.me`,
     openGraph: {
-      title,
-      description,
+      title: `${user.username} | reachoutto.me`,
+      description: `Check out ${user.username}'s links on reachoutto.me`,
       images: [
         {
-          url: ogImage,
+          url: ogImageUrl.toString(),
           width: 1200,
           height: 630,
-          alt: `${username}'s profile`,
+          alt: `${user.username}'s profile`,
         },
       ],
-      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
-      images: [ogImage],
-    },
-    alternates: {
-      canonical: `https://reachoutto.me/${encodeURIComponent(username)}`,
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-      },
+      title: `${user.username} | reachoutto.me`,
+      description: `Check out ${user.username}'s links on reachoutto.me`,
+      images: [ogImageUrl.toString()],
     },
   }
 }
 
 export default function Layout({
   children,
-  params,
 }: {
   children: React.ReactNode
-  params: { username: string }
 }) {
-  return (
-    <section className="min-h-screen">
-      {children}
-    </section>
-  )
+  return <>{children}</>
 }
