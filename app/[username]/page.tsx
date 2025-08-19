@@ -1,97 +1,78 @@
-'use client'
-
 import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { createPublicClient } from "@/lib/supabase/public"
 import PublicProfile from "./public-profile"
-import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import type { Metadata } from 'next'
 
-// Force dynamic rendering to prevent build-time errors with Supabase
-export const dynamic = 'force-dynamic'
+// Generate metadata for each user page
+export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
+  const supabase = createPublicClient()
+  const { data: user } = await supabase
+    .from('users')
+    .select('username, bio, avatar_url')
+    .eq('username', params.username)
+    .single()
 
-export default function ProfilePage() {
-  const pathname = usePathname()
-  const username = pathname.split('/').pop() || ''
-  const [user, setUser] = useState<any>(null)
-  const [links, setLinks] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    async function fetchData() {
-      if (!username) {
-        setError(true)
-        setLoading(false)
-        return
-      }
-
-      const supabase = createClient()
-
-      // Get user profile
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("username", username)
-        .single()
-
-      if (!userData || userError) {
-        setError(true)
-        setLoading(false)
-        return
-      }
-
-      // Get user links
-      const { data: linksData } = await supabase
-        .from("links")
-        .select("*")
-        .eq("user_id", userData.id)
-        .order("position")
-
-      setUser(userData)
-      setLinks(linksData || [])
-      setLoading(false)
-      
-      // Update page metadata with user-specific information
-      if (userData.username) {
-        document.title = `${userData.username} | reachoutto.me`
-        
-        const description = userData.bio || `Check out ${userData.username}'s links on reachoutto.me`
-        
-        // Update meta description
-        const metaDescription = document.querySelector('meta[name="description"]')
-        if (metaDescription) {
-          metaDescription.setAttribute('content', description)
-        }
-        
-        // Update OG image URL to use dynamic generation
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-          (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
-        const ogImageUrl = `${baseUrl}/api/og?username=${encodeURIComponent(userData.username)}`
-        
-        // Update OG image
-        const ogImage = document.querySelector('meta[property="og:image"]')
-        if (ogImage) {
-          ogImage.setAttribute('content', ogImageUrl)
-        }
-        
-        // Update Twitter image
-        const twitterImage = document.querySelector('meta[name="twitter:image"]')
-        if (twitterImage) {
-          twitterImage.setAttribute('content', ogImageUrl)
-        }
-      }
+  if (!user) {
+    return {
+      title: 'User Not Found | reachoutto.me',
+      description: 'This user profile does not exist.',
     }
-
-    fetchData()
-  }, [username])
-
-  if (loading) {
-    return null // No loading text, just render nothing
   }
 
-  if (error || !user) {
+  // Get base URL for OG image
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+  const ogImageUrl = new URL('/api/og', baseUrl)
+  ogImageUrl.searchParams.set('username', user.username)
+
+  const title = `${user.username} | reachoutto.me`
+  const description = user.bio || `Check out ${user.username}'s links on reachoutto.me`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description: description,
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${user.username}'s profile`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${user.username} | reachoutto.me`,
+      description: description,
+      images: [ogImageUrl.toString()],
+    },
+  }
+}
+
+export default async function ProfilePage({ params }: { params: { username: string } }) {
+  const supabase = createPublicClient()
+
+  // Get user profile
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", params.username)
+    .single()
+
+  if (!user || userError) {
     notFound()
   }
 
-  return <PublicProfile user={user} links={links} />
+  // Get user links
+  const { data: links } = await supabase
+    .from("links")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("position")
+
+  return <PublicProfile user={user} links={links || []} />
 }
