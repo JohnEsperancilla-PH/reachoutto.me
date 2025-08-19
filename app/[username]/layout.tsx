@@ -2,17 +2,11 @@ import type { Metadata } from 'next'
 import { createEdgeClient } from '@/lib/supabase/edge'
 import { notFound } from 'next/navigation'
 
-type LayoutProps = {
-  children: React.ReactNode
+export async function generateMetadata({
+  params,
+}: {
   params: { username: string }
-}
-
-type MetadataProps = {
-  params: { username: string }
-  searchParams: { [key: string]: string | string[] | undefined }
-}
-
-export async function generateMetadata({ params }: MetadataProps): Promise<Metadata> {
+}): Promise<Metadata> {
   const username = params.username
   const supabase = createEdgeClient()
 
@@ -67,6 +61,16 @@ export async function generateMetadata({ params }: MetadataProps): Promise<Metad
   }
 }
 
-export default function Layout({ children }: LayoutProps) {
-  return <>{children}</>
+export default function Layout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: { username: string }
+}) {
+  return (
+    <section className="min-h-screen">
+      {children}
+    </section>
+  )
 }
