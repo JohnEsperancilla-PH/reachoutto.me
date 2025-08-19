@@ -1,29 +1,20 @@
-// app/[username]/layout.tsx
 import type { Metadata, ResolvingMetadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { notFound } from 'next/navigation'
 
 export async function generateMetadata(
-  props: { params: { username: string } },
+  { params }: { params: { username: string } },
   _parent?: ResolvingMetadata
 ): Promise<Metadata> {
-  const { params } = props
   const supabase = createPublicClient()
   const { data: user } = await supabase
     .from('users')
-    .select('username, avatar_url')
+    .select('username')
     .eq('username', params.username)
     .single()
 
   if (!user) {
     notFound()
-  }
-
-  const ogImageUrl = new URL('/api/og', 'https://reachoutto.me')
-  ogImageUrl.searchParams.set('type', 'profile')
-  ogImageUrl.searchParams.set('username', user.username)
-  if (user.avatar_url) {
-    ogImageUrl.searchParams.set('avatar', user.avatar_url)
   }
 
   return {
@@ -34,7 +25,7 @@ export async function generateMetadata(
       description: `Check out ${user.username}'s links on reachoutto.me`,
       images: [
         {
-          url: ogImageUrl.toString(),
+          url: '/og-image.png',
           width: 1200,
           height: 630,
           alt: `${user.username}'s profile`,
@@ -45,15 +36,11 @@ export async function generateMetadata(
       card: 'summary_large_image',
       title: `${user.username} | reachoutto.me`,
       description: `Check out ${user.username}'s links on reachoutto.me`,
-      images: [ogImageUrl.toString()],
+      images: ['/og-image.png'],
     },
   }
 }
 
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
