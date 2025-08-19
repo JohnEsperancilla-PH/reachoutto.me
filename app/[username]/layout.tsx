@@ -2,11 +2,13 @@ import { Metadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { notFound } from 'next/navigation'
 
-export async function generateMetadata({
-  params,
-}: {
+type Props = {
   params: { username: string }
-}): Promise<Metadata> {
+}
+
+export async function generateMetadata(
+  { params }: Props
+): Promise<Metadata> {
   const supabase = createPublicClient()
   const { data: user } = await supabase
     .from('users')
@@ -49,10 +51,12 @@ export async function generateMetadata({
   }
 }
 
+interface LayoutProps extends Props {
+  children: React.ReactNode
+}
+
 export default function UserLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: LayoutProps) {
   return children
 }
