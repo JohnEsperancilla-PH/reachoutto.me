@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import LinkCard from "@/components/link-card"
 import PortfolioCard from "@/components/portfolio-card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Link as LinkIcon, Share2, Check, Coffee, Briefcase } from "lucide-react"
+import { Link as LinkIcon, Share2, Check, Coffee, Briefcase, CheckCircle } from "lucide-react"
 import type { User, Link as LinkType, PortfolioItem } from "@/lib/types/database"
 
 interface PublicProfileProps {
@@ -112,7 +112,15 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
             )}
 
             <div className="space-y-2 sm:space-y-3">
-              <h1 className="text-xl sm:text-2xl font-bold">@{user.username}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold flex items-center justify-center gap-1">
+                @{user.username}
+                {user.verified && (
+                  <span className="inline-flex items-center" aria-label="Verified">
+                    <CheckCircle className="inline h-5 w-5 text-blue-500" />
+                    <span className="sr-only">Verified</span>
+                  </span>
+                )}
+              </h1>
               {user.bio && (
                 <p className="text-sm sm:text-base text-muted-foreground text-center max-w-xs sm:max-w-sm mx-auto leading-relaxed px-4 sm:px-0">
                   {user.bio}

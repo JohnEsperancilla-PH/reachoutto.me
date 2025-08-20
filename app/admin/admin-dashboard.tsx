@@ -13,7 +13,8 @@ import {
   LogOut,
   Shield,
   Calendar,
-  Mail
+  Mail,
+  CheckCircle
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -176,7 +177,14 @@ export default function AdminDashboard({ users: initialUsers, links: initialLink
                     >
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">@{user.username}</span>
+                          <span className="font-medium flex items-center gap-1">@{user.username}
+                            {user.verified && (
+                              <span className="inline-flex items-center" aria-label="Verified">
+                                <CheckCircle className="inline h-4 w-4 text-blue-500" />
+                                <span className="sr-only">Verified</span>
+                              </span>
+                            )}
+                          </span>
                           {user.is_admin && (
                             <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
                               Admin
@@ -198,6 +206,34 @@ export default function AdminDashboard({ users: initialUsers, links: initialLink
                         )}
                       </div>
                       <div className="flex items-center gap-2">
+                        {/* Verified Toggle */}
+                        <Button
+                          variant={user.verified ? "default" : "outline"}
+                          size="icon"
+                          onClick={async () => {
+                            setLoading(true)
+                            try {
+                              // Use the admin function to update verification status
+                              const { data, error } = await supabase.rpc('admin_update_user_verification', {
+                                target_user_id: user.id,
+                                verified_status: !user.verified
+                              })
+                              
+                              if (error) throw error
+                              
+                              // Update local state
+                              setUsers(users.map(u => u.id === user.id ? { ...u, verified: !user.verified } : u))
+                            } catch (error: any) {
+                              console.error("Failed to update verified status:", error)
+                              alert("Failed to update verified status: " + error.message)
+                            } finally {
+                              setLoading(false)
+                            }
+                          }}
+                          disabled={loading}
+                        >
+                          <CheckCircle className={`h-4 w-4 ${user.verified ? "text-blue-500" : "text-muted-foreground"}`} />
+                        </Button>
                         <Link href={`/${user.username}`}>
                           <Button variant="ghost" size="icon">
                             <ExternalLink className="h-4 w-4" />

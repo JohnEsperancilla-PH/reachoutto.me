@@ -10,6 +10,7 @@ export interface Database {
           is_admin: boolean
           show_links: boolean
           show_portfolio: boolean
+          verified: boolean
           created_at: string
         }
         Insert: {
@@ -20,6 +21,7 @@ export interface Database {
           is_admin?: boolean
           show_links?: boolean
           show_portfolio?: boolean
+          verified?: boolean
           created_at?: string
         }
         Update: {
@@ -30,6 +32,7 @@ export interface Database {
           is_admin?: boolean
           show_links?: boolean
           show_portfolio?: boolean
+          verified?: boolean
           created_at?: string
         }
       }
