@@ -124,18 +124,18 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 md:px-6">
+      <main className="container mx-auto px-4 md:px-6 pb-8">
         {/* Hero Section */}
-        <section className="text-center space-y-8 py-16 lg:py-24 max-w-4xl mx-auto">
+        <section className="text-center space-y-8 py-12 sm:py-16 lg:py-24 max-w-4xl mx-auto">
           <div className="space-y-6">
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold tracking-tight">
               One Link to
               <br />
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Rule Them All
               </span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-xl mx-auto">
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto">
               {isAuthenticated 
                 ? "Welcome back! Manage your links and portfolio from your dashboard."
                 : "One beautiful link for all your social media, portfolio, and important content."
@@ -162,16 +162,16 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-16 max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">
+        <section className="py-12 sm:py-16 max-w-5xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Why Choose{" "}
               <span className="bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent">
                 reachoutto.me
               </span>
             </h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <Card className="border-2 hover:border-primary/20 transition-all">
               <CardHeader>
                 <Zap className="h-8 w-8 text-primary mb-3" />
@@ -205,9 +205,9 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="text-center space-y-6 bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl p-12 border-2 border-primary/10 max-w-5xl mx-auto">
+        <section className="text-center space-y-6 bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl p-6 sm:p-8 md:p-12 border-2 border-primary/10 max-w-5xl mx-auto mb-8 sm:mb-12">
           <div className="space-y-4">
-            <h2 className="text-4xl font-bold">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
               {isAuthenticated ? (
                 <>
                   Ready to{" "}
@@ -224,7 +224,7 @@ export default function Home() {
                 </>
               )}
             </h2>
-            <p className="text-xl max-w-xl mx-auto">
+            <p className="text-lg sm:text-xl max-w-xl mx-auto">
               {isAuthenticated 
                 ? "Add new links, update your portfolio, and customize your page."
                 : "Create your link page now. Free forever."
@@ -235,19 +235,19 @@ export default function Home() {
             {isAuthenticated ? (
               <Button 
                 size="lg" 
-                className="text-xl px-8 py-6"
+                className="text-lg sm:text-xl px-6 sm:px-8 py-4 sm:py-6"
                 onClick={handleDashboardNavigation}
               >
                 Manage Your Page
               </Button>
             ) : (
               <Link href="/auth">
-                <Button size="lg" className="text-xl px-8 py-6">
+                <Button size="lg" className="text-lg sm:text-xl px-6 sm:px-8 py-4 sm:py-6">
                   Start Building
                 </Button>
               </Link>
             )}
-            <div className="flex items-center gap-6 text-base text-muted-foreground">
+            <div className="flex items-center gap-4 sm:gap-6 text-sm sm:text-base text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
                 <span>Quick setup</span>
