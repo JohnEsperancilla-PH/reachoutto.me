@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation"
 import type { User, Link as LinkType } from "@/lib/types/database"
 
 interface AdminDashboardProps {
-  users: User[]
+  users: (User & { email: string | null })[]
   links: (LinkType & { users: { username: string } })[]
 }
 
@@ -194,7 +194,7 @@ export default function AdminDashboard({ users: initialUsers, links: initialLink
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Mail className="h-3 w-3" />
-                            {user.id}
+                            {user.email || 'No email'}
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />

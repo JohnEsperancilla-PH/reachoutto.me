@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import AdminDashboard from "./admin-dashboard"
 
 // Force dynamic rendering to prevent build-time errors with Supabase
@@ -33,6 +34,27 @@ export default async function AdminPage() {
     .select("*")
     .order("created_at", { ascending: false })
 
+  // Get email addresses for all users from auth.users
+  let usersWithEmails = users || []
+  
+  try {
+    const adminClient = createAdminClient()
+    const { data: authUsers } = await adminClient.auth.admin.listUsers()
+
+    // Combine user data with email addresses
+    usersWithEmails = users?.map(user => {
+      const authUser = authUsers?.users.find(au => au.id === user.id)
+      return {
+        ...user,
+        email: authUser?.email || null
+      }
+    }) || []
+  } catch (error) {
+    console.error('Failed to fetch user emails:', error)
+    // Fallback to users without emails if admin client fails
+    usersWithEmails = users?.map(user => ({ ...user, email: null })) || []
+  }
+
   // Get all links with user info
   const { data: links } = await supabase
     .from("links")
@@ -44,7 +66,7 @@ export default async function AdminPage() {
 
   return (
     <AdminDashboard 
-      users={users || []} 
+      users={usersWithEmails} 
       links={links || []} 
     />
   )

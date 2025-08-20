@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Camera, Trash2, Loader2 } from "lucide-react"
+import { Camera, Trash2, Loader2, User } from "lucide-react"
 import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/supabase/storage"
 
 interface ProfilePhotoUploadProps {
@@ -75,8 +75,8 @@ export function ProfilePhotoUpload({ userId, currentPhotoUrl, onUpdate, classNam
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
-              {userId.charAt(0).toUpperCase()}
+            <div className="w-full h-full flex items-center justify-center bg-muted">
+              <User className="h-8 w-8 text-muted-foreground" />
             </div>
           )}
           
