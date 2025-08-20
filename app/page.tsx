@@ -276,9 +276,9 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <BuyMeCoffeeButton />
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-                <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-                <a href="#" className="hover:text-foreground transition-colors">Support</a>
+                <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+                <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+                <Link href="/support" className="hover:text-foreground transition-colors">Support</Link>
               </div>
             </div>
           </div>
