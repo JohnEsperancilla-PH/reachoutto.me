@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 
 // Force dynamic rendering to prevent build-time errors with Supabase
 export const dynamic = 'force-dynamic'
@@ -10,9 +10,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Link as LinkIcon, Mail, Lock, User } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { Link as LinkIcon, Mail, Lock, User, Loader2 } from "lucide-react"
+import { createAuthClient } from "@/lib/supabase/auth-client"
 import { useRouter } from "next/navigation"
+
+// Preloader component
+function AuthPreloader({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+      <div className="text-center space-y-4">
+        <div className="flex justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold">{message}</h2>
+          <p className="text-muted-foreground">Setting up your workspace</p>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <img 
+            src="/images/reachouttome_logo.png" 
+            alt="reachoutto.me" 
+            className="h-4 w-4 invert dark:invert-0"
+          />
+          <span>reachoutto.me</span>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -21,18 +46,60 @@ export default function AuthPage() {
   const [username, setUsername] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [checkingSession, setCheckingSession] = useState(true)
+  const [redirectingWithSession, setRedirectingWithSession] = useState(false)
   const router = useRouter()
 
-  const supabase = createClient()
+  // Initialize theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light")
+    
+    document.documentElement.classList.toggle("dark", initialTheme === "dark")
+  }, [])
 
-  const handleAuth = async (e: React.FormEvent) => {
+  // Memoize the Supabase client to prevent recreation
+  const supabase = useMemo(() => createAuthClient(), [])
+
+  // Check for existing session on component mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          // User is already authenticated, show signing in message and redirect
+          setCheckingSession(false)
+          setRedirectingWithSession(true)
+          setTimeout(() => {
+            window.location.href = "/dashboard"
+          }, 800) // Small delay to show the message
+          return
+        }
+      } catch (error) {
+        console.error('Session check failed:', error)
+      } finally {
+        setCheckingSession(false)
+      }
+    }
+
+    checkSession()
+  }, [supabase])
+
+  const handleAuth = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
+    // Set a timeout to prevent hanging
+    const timeoutId = setTimeout(() => {
+      setError("Login is taking longer than expected. Please try again.")
+      setLoading(false)
+    }, 15000) // 15 second timeout
+
     try {
       if (isSignUp) {
-        // Sign up
+        // Sign up with optimized options
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -40,32 +107,64 @@ export default function AuthPage() {
             data: {
               username: username,
             },
+            emailRedirectTo: `${window.location.origin}/dashboard`
           },
         })
 
         if (error) throw error
 
         if (data.user && !data.session) {
+          clearTimeout(timeoutId)
           setError("Please check your email for verification link")
+          setLoading(false)
           return
         }
       } else {
-        // Sign in
-        const { error } = await supabase.auth.signInWithPassword({
+        // Sign in with faster method
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
         if (error) throw error
+
+        clearTimeout(timeoutId)
+        // Fast redirect without refresh
+        window.location.href = "/dashboard"
+        return
       }
 
-      router.push("/dashboard")
-      router.refresh()
+      clearTimeout(timeoutId)
+      // Redirect to dashboard
+      window.location.href = "/dashboard"
     } catch (error: any) {
+      clearTimeout(timeoutId)
       setError(error.message)
-    } finally {
       setLoading(false)
     }
+  }, [isSignUp, email, password, username, supabase])
+
+  const toggleAuthMode = useCallback(() => {
+    setIsSignUp(!isSignUp)
+    setError("")
+    setEmail("")
+    setPassword("")
+    setUsername("")
+  }, [isSignUp])
+
+  // Show preloader while checking session - moved after all hooks
+  if (checkingSession) {
+    return <AuthPreloader message="Checking authentication status..." />
+  }
+
+  // Show signing in message when redirecting with existing session
+  if (redirectingWithSession) {
+    return <AuthPreloader message="Signing you in..." />
+  }
+
+  // Show preloader when form is being submitted
+  if (loading) {
+    return <AuthPreloader message={isSignUp ? "Creating your account..." : "Signing you in..."} />
   }
 
   return (
@@ -108,6 +207,7 @@ export default function AuthPage() {
                       onChange={(e) => setUsername(e.target.value)}
                       className="pl-10"
                       required={isSignUp}
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -125,6 +225,7 @@ export default function AuthPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -141,6 +242,7 @@ export default function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -152,11 +254,12 @@ export default function AuthPage() {
               )}
 
               <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading
-                  ? "Loading..."
-                  : isSignUp
-                  ? "Create Account"
-                  : "Sign In"}
+                <span className="sm:hidden">
+                  {isSignUp ? "Sign Up" : "Sign In"}
+                </span>
+                <span className="hidden sm:inline">
+                  {isSignUp ? "Create Account" : "Sign In"}
+                </span>
               </Button>
             </form>
 
@@ -166,14 +269,9 @@ export default function AuthPage() {
               </span>{" "}
               <button
                 type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp)
-                  setError("")
-                  setEmail("")
-                  setPassword("")
-                  setUsername("")
-                }}
-                className="text-primary hover:underline font-medium"
+                onClick={toggleAuthMode}
+                className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
               >
                 {isSignUp ? "Sign in" : "Sign up"}
               </button>

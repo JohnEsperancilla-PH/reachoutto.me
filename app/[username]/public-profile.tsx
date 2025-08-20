@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import LinkCard from "@/components/link-card"
 import PortfolioCard from "@/components/portfolio-card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Link as LinkIcon, Share2, Check, Coffee, Briefcase, CheckCircle } from "lucide-react"
+import { ProfileQRCode } from "@/components/profile-qr-code"
+import { ProfileShareModal } from "@/components/profile-share-modal"
+import { Link as LinkIcon, Coffee, Briefcase, CheckCircle } from "lucide-react"
 import type { User, Link as LinkType, PortfolioItem } from "@/lib/types/database"
 
 interface PublicProfileProps {
@@ -17,7 +19,6 @@ interface PublicProfileProps {
 }
 
 export default function PublicProfile({ user, links, portfolioItems }: PublicProfileProps) {
-  const [copied, setCopied] = useState(false)
   const [activeSection, setActiveSection] = useState<'links' | 'portfolio'>('links')
 
   // Determine which sections are available
@@ -33,35 +34,6 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
     }
   }, [hasLinks, hasPortfolio])
 
-  const handleShare = async () => {
-    const url = window.location.href
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${user.username} - reachoutto.me`,
-          text: user.bio || `Check out ${user.username}'s links`,
-          url: url,
-        })
-      } catch (error) {
-        // Fallback to clipboard
-        copyToClipboard(url)
-      }
-    } else {
-      copyToClipboard(url)
-    }
-  }
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
-      console.error("Failed to copy:", error)
-    }
-  }
-
   const handleLinkClick = (url: string) => {
     // Add https:// if not present
     const fullUrl = url.startsWith("http") ? url : `https://${url}`
@@ -73,23 +45,20 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
       <main className="container mx-auto px-4 md:px-6 py-6 sm:py-8">
         <div className="max-w-sm sm:max-w-md mx-auto space-y-6 sm:space-y-8">
           {/* Top Controls */}
-          <div className="flex justify-end items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
-            >
-              {copied ? (
-                <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-              ) : (
-                <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
-              )}
-              <span className="hidden sm:inline">
-                {copied ? "Copied!" : "Share"}
-              </span>
-            </Button>
-            <ThemeToggle />
+          <div className="flex justify-between items-center">
+            <ProfileQRCode 
+              profileUrl={typeof window !== 'undefined' ? window.location.href : `https://reachoutto.me/${user.username}`}
+              username={user.username}
+            />
+            <div className="flex items-center gap-2">
+              <ProfileShareModal
+                username={user.username}
+                bio={user.bio || undefined}
+                profileUrl={typeof window !== 'undefined' ? window.location.href : `https://reachoutto.me/${user.username}`}
+                ogImageUrl={`/api/og?username=${user.username}`}
+              />
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Profile Section */}
