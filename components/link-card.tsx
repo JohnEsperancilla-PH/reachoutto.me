@@ -17,9 +17,10 @@ interface LinkCardProps {
   showControls?: boolean
   className?: string
   isBeingEdited?: boolean
+  customTheme?: boolean // New prop to indicate custom background theme
 }
 
-export function LinkCard({ link, onClick, onEdit, showControls = false, className, isBeingEdited = false }: LinkCardProps) {
+export function LinkCard({ link, onClick, onEdit, showControls = false, className, isBeingEdited = false, customTheme = false }: LinkCardProps) {
 
   const iconName = link.icon || "Link"
   const IconComponent = (Icons[iconName as keyof typeof Icons] ?? Icons.Link) as any
@@ -34,6 +35,16 @@ export function LinkCard({ link, onClick, onEdit, showControls = false, classNam
 
   // Color mapping for proper Tailwind classes
   const getColorClasses = (color: string) => {
+    if (customTheme) {
+      // For custom background themes, use glass morphism styling
+      return {
+        background: "bg-white/10 backdrop-blur-sm border-white/20",
+        text: "text-white",
+        icon: "text-white",
+        border: "hover:border-white/40"
+      }
+    }
+
     if (!color || color === "default") {
       return {
         background: "",
@@ -108,7 +119,7 @@ export function LinkCard({ link, onClick, onEdit, showControls = false, classNam
             )}
           </div>
         ) : (
-          <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+          <ExternalLink className={`h-4 w-4 group-hover:text-primary transition-colors flex-shrink-0 ${customTheme ? 'text-white/70 group-hover:text-white' : 'text-muted-foreground'}`} />
         )}
       </div>
     </Card>

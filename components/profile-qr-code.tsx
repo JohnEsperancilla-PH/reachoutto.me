@@ -16,9 +16,10 @@ interface ProfileQRCodeProps {
   profileUrl: string
   username: string
   className?: string
+  customTheme?: boolean
 }
 
-export function ProfileQRCode({ profileUrl, username, className = "" }: ProfileQRCodeProps) {
+export function ProfileQRCode({ profileUrl, username, className = "", customTheme = false }: ProfileQRCodeProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("")
   const [copied, setCopied] = useState(false)
 
@@ -86,7 +87,11 @@ export function ProfileQRCode({ profileUrl, username, className = "" }: ProfileQ
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className={`flex items-center gap-2 ${
+              customTheme 
+                ? 'bg-white/10 hover:bg-white/20 text-white border-white/30 hover:border-white/50 backdrop-blur-sm' 
+                : ''
+            }`}
           >
             <QrCode className="h-4 w-4" />
             QR Code

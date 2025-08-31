@@ -16,6 +16,8 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ProfilePhotoUpload } from "@/components/profile-photo-upload"
 import { PortfolioImageUpload } from "@/components/portfolio-image-upload"
+import { BackgroundPicker } from "@/components/background-picker"
+import { FontPicker } from "@/components/font-picker"
 import LinkCard from "@/components/link-card"
 import PortfolioCard from "@/components/portfolio-card"
 import { IconPicker } from "@/components/icon-picker"
@@ -38,7 +40,8 @@ import {
   Upload,
   Image as ImageIcon,
   QrCode,
-  Bug
+  Bug,
+  Mail
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { uploadPortfolioImage, deletePortfolioImage } from "@/lib/supabase/storage"
@@ -133,9 +136,33 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
   const [portfolioItems, setPortfolioItems] = React.useState<PortfolioItem[]>([])
   const [username, setUsername] = React.useState("")
   const [bio, setBio] = React.useState("")
+  const [contactEmail, setContactEmail] = React.useState("")
+  const [contactPhone, setContactPhone] = React.useState("")
+  const [showContact, setShowContact] = React.useState(false)
+  const [customBackground, setCustomBackground] = React.useState<string | null>(null)
+  const [useCustomBackground, setUseCustomBackground] = React.useState(false)
+  const [customFont, setCustomFont] = React.useState<string | null>(null)
+  const [useCustomFont, setUseCustomFont] = React.useState(false)
   const [showLinks, setShowLinks] = React.useState(true)
   const [showPortfolio, setShowPortfolio] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState<'profile' | 'customization'>('profile')
+  
+  // Change tracking states
+  const [hasProfileSettingsChanges, setHasProfileSettingsChanges] = React.useState(false)
+  const [hasContactChanges, setHasContactChanges] = React.useState(false)
+  const [hasCustomizationChanges, setHasCustomizationChanges] = React.useState(false)
+  const [originalProfile, setOriginalProfile] = React.useState<{
+    username: string
+    bio: string
+    contactEmail: string
+    contactPhone: string
+    customBackground: string | null
+    useCustomBackground: boolean
+    customFont: string | null
+    useCustomFont: boolean
+  } | null>(null)
+  
   const [editingLink, setEditingLink] = React.useState<LinkType | null>(null)
   const [editingPortfolio, setEditingPortfolio] = React.useState<PortfolioItem | null>(null)
   const [linkTitle, setLinkTitle] = React.useState("")
@@ -156,9 +183,66 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
     setPortfolioItems(initialPortfolioItems)
     setUsername(profile?.username || "")
     setBio(profile?.bio || "")
+    setContactEmail(profile?.contact_email || "")
+    setContactPhone(profile?.contact_phone || "")
+    setShowContact(profile?.show_contact ?? false)
+    setCustomBackground(profile?.custom_background || null)
+    setUseCustomBackground(profile?.use_custom_background ?? false)
+    setCustomFont(profile?.custom_font || null)
+    setUseCustomFont(profile?.use_custom_font ?? false)
     setShowLinks(profile?.show_links ?? true)
     setShowPortfolio(profile?.show_portfolio ?? false)
+    
+    // Set original profile for change tracking
+    setOriginalProfile({
+      username: profile?.username || "",
+      bio: profile?.bio || "",
+      contactEmail: profile?.contact_email || "",
+      contactPhone: profile?.contact_phone || "",
+      customBackground: profile?.custom_background || null,
+      useCustomBackground: profile?.use_custom_background ?? false,
+      customFont: profile?.custom_font || null,
+      useCustomFont: profile?.use_custom_font ?? false
+    })
   }, [initialLinks, initialPortfolioItems, profile])
+  
+  // Track profile settings changes (username, bio)
+  React.useEffect(() => {
+    if (!originalProfile) return
+    
+    const profileSettingsChanged = (
+      username !== originalProfile.username ||
+      bio !== originalProfile.bio
+    )
+    
+    setHasProfileSettingsChanges(profileSettingsChanged)
+  }, [username, bio, originalProfile])
+  
+  // Track contact changes (email, phone)
+  React.useEffect(() => {
+    if (!originalProfile) return
+    
+    const contactChanged = (
+      contactEmail !== originalProfile.contactEmail ||
+      contactPhone !== originalProfile.contactPhone
+    )
+    
+    setHasContactChanges(contactChanged)
+  }, [contactEmail, contactPhone, originalProfile])
+  
+  // Track customization changes
+  React.useEffect(() => {
+    if (!originalProfile) return
+    
+    const customizationChanged = (
+      customBackground !== originalProfile.customBackground ||
+      useCustomBackground !== originalProfile.useCustomBackground ||
+      customFont !== originalProfile.customFont ||
+      useCustomFont !== originalProfile.useCustomFont
+    )
+    
+    setHasCustomizationChanges(customizationChanged)
+  }, [customBackground, useCustomBackground, customFont, useCustomFont, originalProfile])
   
   const router = useRouter()
   const supabase = createClient()
@@ -185,11 +269,30 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
           id: user.id,
           username: username,
           bio: bio,
+          contact_email: contactEmail,
+          contact_phone: contactPhone,
+          show_contact: showContact,
+          custom_background: customBackground,
+          use_custom_background: useCustomBackground,
+          custom_font: customFont,
+          use_custom_font: useCustomFont,
           show_links: showLinks,
           show_portfolio: showPortfolio,
         })
 
       if (error) throw error
+      
+      // Update original profile state after successful save
+      setOriginalProfile({
+        username,
+        bio,
+        contactEmail,
+        contactPhone,
+        customBackground,
+        useCustomBackground,
+        customFont,
+        useCustomFont
+      })
       
       // Update the URL if username changed
       if (username !== profile?.username) {
@@ -202,7 +305,7 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
     }
   }
 
-  const handleSectionToggleUpdate = async (field: 'show_links' | 'show_portfolio', value: boolean) => {
+  const handleSectionToggleUpdate = async (field: 'show_links' | 'show_portfolio' | 'show_contact', value: boolean) => {
     try {
       const { error } = await supabase
         .from("users")
@@ -210,8 +313,53 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
         .eq("id", user.id)
 
       if (error) throw error
+
+      // Update local state
+      if (field === 'show_links') setShowLinks(value)
+      if (field === 'show_portfolio') setShowPortfolio(value)
+      if (field === 'show_contact') setShowContact(value)
     } catch (error: any) {
       console.error("Error updating section visibility:", error.message)
+    }
+  }
+
+  const handleBackgroundUpdate = async (background: string | null, useCustom: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ 
+          custom_background: background,
+          use_custom_background: useCustom
+        })
+        .eq("id", user.id)
+
+      if (error) throw error
+
+      // Update local state
+      setCustomBackground(background)
+      setUseCustomBackground(useCustom)
+    } catch (error: any) {
+      console.error("Error updating background:", error.message)
+    }
+  }
+
+  const handleFontUpdate = async (font: string | null, useCustom: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ 
+          custom_font: font,
+          use_custom_font: useCustom
+        })
+        .eq("id", user.id)
+
+      if (error) throw error
+
+      // Update local state
+      setCustomFont(font)
+      setUseCustomFont(useCustom)
+    } catch (error: any) {
+      console.error("Error updating font:", error.message)
     }
   }
 
@@ -551,6 +699,35 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
 
       <main className="container mx-auto px-4 md:px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          {/* Tab Navigation */}
+          <div className="flex items-center space-x-1 bg-muted rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'profile'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+              }`}
+            >
+              <UserIcon className="h-4 w-4" />
+              Profile
+            </button>
+            <button
+              onClick={() => setActiveTab('customization')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'customization'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+              }`}
+            >
+              <Settings className="h-4 w-4" />
+              Customization
+            </button>
+          </div>
+
+          {/* Profile Tab Content */}
+          {activeTab === 'profile' && (
+            <div className="space-y-8">
           {/* Profile Settings */}
           <Card>
             <CardHeader>
@@ -609,60 +786,138 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
                   className="min-h-[100px]"
                 />
               </div>
-              
-              {/* Section Toggles */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-px bg-border flex-1" />
-                  <span className="text-xs text-muted-foreground font-medium px-3">SECTIONS</span>
-                  <div className="h-px bg-border flex-1" />
+              {hasProfileSettingsChanges && (
+                <Button onClick={handleProfileUpdate} disabled={loading}>
+                  {loading ? "Saving..." : "Save Profile"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+              <CardDescription>
+                Add contact details for your profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contact-email">Contact Email</Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="your@email.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional email for contact
+                  </p>
                 </div>
-                
-                <div className="grid gap-4">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <LinkIcon className="h-4 w-4" />
-                        <Label htmlFor="show-links" className="font-medium">Links Section</Label>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Show the links section on your public profile
-                      </p>
-                    </div>
-                    <Switch
-                      id="show-links"
-                      checked={showLinks}
-                      onCheckedChange={(value) => {
-                        setShowLinks(value)
-                        handleSectionToggleUpdate('show_links', value)
-                      }}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
-                        <Label htmlFor="show-portfolio" className="font-medium">Portfolio Section</Label>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Show the portfolio section on your public profile
-                      </p>
-                    </div>
-                    <Switch
-                      id="show-portfolio"
-                      checked={showPortfolio}
-                      onCheckedChange={(value) => {
-                        setShowPortfolio(value)
-                        handleSectionToggleUpdate('show_portfolio', value)
-                      }}
-                    />
-                  </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact-phone">Contact Phone</Label>
+                  <Input
+                    id="contact-phone"
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional phone number for contact
+                  </p>
                 </div>
               </div>
-              <Button onClick={handleProfileUpdate} disabled={loading}>
-                {loading ? "Saving..." : "Save Profile"}
-              </Button>
+              {hasContactChanges && (
+                <div className="flex justify-end pt-4">
+                  <Button onClick={handleProfileUpdate} disabled={loading}>
+                    {loading ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Section Toggles */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Profile Sections
+              </CardTitle>
+              <CardDescription>
+                Control which sections appear on your public profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      <Label htmlFor="show-contact" className="font-medium">Contact Section</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show contact information on your profile
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-contact"
+                    checked={showContact}
+                    onCheckedChange={(value) => {
+                      setShowContact(value)
+                      handleSectionToggleUpdate('show_contact', value)
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="h-4 w-4" />
+                      <Label htmlFor="show-links" className="font-medium">Links Section</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show your links on your profile
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-links"
+                    checked={showLinks}
+                    onCheckedChange={(value) => {
+                      setShowLinks(value)
+                      handleSectionToggleUpdate('show_links', value)
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      <Label htmlFor="show-portfolio" className="font-medium">Portfolio Section</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show your portfolio on your profile
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-portfolio"
+                    checked={showPortfolio}
+                    onCheckedChange={(value) => {
+                      setShowPortfolio(value)
+                      handleSectionToggleUpdate('show_portfolio', value)
+                    }}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -1143,6 +1398,48 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
             </AccordionItem>
           )}
           </Accordion>
+            </div>
+          )}
+
+          {/* Customization Tab Content */}
+          {activeTab === 'customization' && (
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Customization Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Personalize the appearance of your profile
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Background Customization */}
+                  <BackgroundPicker
+                    currentBackground={customBackground}
+                    useCustomBackground={useCustomBackground}
+                    onBackgroundChange={handleBackgroundUpdate}
+                  />
+
+                  {/* Font Customization */}
+                  <FontPicker
+                    currentFont={customFont}
+                    useCustomFont={useCustomFont}
+                    onFontChange={handleFontUpdate}
+                  />
+                  
+                  {hasCustomizationChanges && (
+                    <div className="flex justify-end pt-4">
+                      <Button onClick={handleProfileUpdate} disabled={loading}>
+                        {loading ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </main>
 

@@ -12,6 +12,13 @@ export interface Database {
           show_portfolio: boolean
           verified: boolean
           created_at: string
+          contact_email: string | null
+          contact_phone: string | null
+          show_contact: boolean
+          custom_background: string | null
+          use_custom_background: boolean
+          custom_font: string | null
+          use_custom_font: boolean
         }
         Insert: {
           id: string
@@ -23,6 +30,13 @@ export interface Database {
           show_portfolio?: boolean
           verified?: boolean
           created_at?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          show_contact?: boolean
+          custom_background?: string | null
+          use_custom_background?: boolean
+          custom_font?: string | null
+          use_custom_font?: boolean
         }
         Update: {
           id?: string
@@ -34,6 +48,13 @@ export interface Database {
           show_portfolio?: boolean
           verified?: boolean
           created_at?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          show_contact?: boolean
+          custom_background?: string | null
+          use_custom_background?: boolean
+          custom_font?: string | null
+          use_custom_font?: boolean
         }
       }
       links: {

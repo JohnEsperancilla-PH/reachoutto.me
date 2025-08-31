@@ -12,6 +12,7 @@ interface PortfolioCardProps {
   showControls?: boolean
   className?: string
   isBeingEdited?: boolean
+  customTheme?: boolean // New prop to indicate custom background theme
 }
 
 export default function PortfolioCard({ 
@@ -19,7 +20,8 @@ export default function PortfolioCard({
   onEdit, 
   showControls = false, 
   className = "",
-  isBeingEdited = false 
+  isBeingEdited = false,
+  customTheme = false
 }: PortfolioCardProps) {
   const handleClick = () => {
     if (item.project_url && !showControls) {
@@ -38,6 +40,8 @@ export default function PortfolioCard({
   return (
     <Card 
       className={`group transition-all duration-200 hover:shadow-lg ${
+        customTheme ? 'bg-white/10 backdrop-blur-sm border-white/20 text-white hover:border-white/40' : ''
+      } ${
         showControls 
           ? "cursor-default" 
           : item.project_url 
@@ -67,7 +71,7 @@ export default function PortfolioCard({
           {/* Content */}
           <div className="space-y-3 min-h-[120px] flex flex-col">
             <div className="flex items-start justify-between">
-              <h3 className="font-semibold text-base leading-tight line-clamp-2 flex-1 pr-2">
+              <h3 className={`font-semibold text-base leading-tight line-clamp-2 flex-1 pr-2 ${customTheme ? 'text-white' : ''}`}>
                 {item.title}
               </h3>
               
@@ -84,13 +88,13 @@ export default function PortfolioCard({
             </div>
             
             {item.description && (
-              <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1">
+              <p className={`text-sm line-clamp-3 leading-relaxed flex-1 ${customTheme ? 'text-white/80' : 'text-muted-foreground'}`}>
                 {item.description}
               </p>
             )}
             
             {item.project_url && !showControls && (
-              <div className="flex items-center gap-2 text-sm text-primary font-medium mt-auto">
+              <div className={`flex items-center gap-2 text-sm font-medium mt-auto ${customTheme ? 'text-white' : 'text-primary'}`}>
                 <ExternalLink className="h-4 w-4" />
                 <span>View Project</span>
               </div>

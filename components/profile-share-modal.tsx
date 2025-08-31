@@ -18,6 +18,7 @@ interface ProfileShareModalProps {
   profileUrl: string
   ogImageUrl: string
   className?: string
+  customTheme?: boolean
 }
 
 export function ProfileShareModal({ 
@@ -25,7 +26,8 @@ export function ProfileShareModal({
   bio, 
   profileUrl, 
   ogImageUrl,
-  className = "" 
+  className = "",
+  customTheme = false
 }: ProfileShareModalProps) {
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
@@ -79,7 +81,11 @@ export function ProfileShareModal({
           <Button
             variant="outline"
             size="sm"
-            className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+            className={`gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 ${
+              customTheme 
+                ? 'bg-white/10 hover:bg-white/20 text-white border-white/30 hover:border-white/50 backdrop-blur-sm' 
+                : ''
+            }`}
           >
             <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Share</span>
