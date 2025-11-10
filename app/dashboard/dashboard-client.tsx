@@ -20,6 +20,7 @@ import { BackgroundPicker } from "@/components/background-picker"
 import { FontPicker } from "@/components/font-picker"
 import LinkCard from "@/components/link-card"
 import PortfolioCard from "@/components/portfolio-card"
+import { ShopItemCard } from "@/components/shop-item-card"
 import { IconPicker } from "@/components/icon-picker"
 import { ColorPicker } from "@/components/color-picker"
 import { BuyMeCoffeeButton } from "@/components/buy-me-coffee-button"
@@ -41,13 +42,14 @@ import {
   Image as ImageIcon,
   QrCode,
   Bug,
-  Mail
+  Mail,
+  Tag
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { uploadPortfolioImage, deletePortfolioImage } from "@/lib/supabase/storage"
 import { useRouter } from "next/navigation"
 import type { User as AuthUser } from "@supabase/supabase-js"
-import type { User, Link as LinkType, PortfolioItem } from "@/lib/types/database"
+import type { User, Link as LinkType, PortfolioItem, ShopItem } from "@/lib/types/database"
 import {
   DndContext,
   closestCenter,
@@ -128,9 +130,16 @@ interface DashboardClientProps {
   profile: User | null
   initialLinks: LinkType[]
   initialPortfolioItems: PortfolioItem[]
+  initialShopItems?: ShopItem[]
 }
 
-export default function DashboardClient({ user, profile, initialLinks, initialPortfolioItems }: DashboardClientProps) {
+export default function DashboardClient({ 
+  user, 
+  profile, 
+  initialLinks, 
+  initialPortfolioItems,
+  initialShopItems = []
+}: DashboardClientProps) {
   const [mounted, setMounted] = React.useState(false)
   const [links, setLinks] = React.useState<LinkType[]>([])
   const [portfolioItems, setPortfolioItems] = React.useState<PortfolioItem[]>([])
@@ -145,6 +154,7 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
   const [useCustomFont, setUseCustomFont] = React.useState(false)
   const [showLinks, setShowLinks] = React.useState(true)
   const [showPortfolio, setShowPortfolio] = React.useState(false)
+  const [showShop, setShowShop] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState<'profile' | 'customization'>('profile')
   
@@ -165,6 +175,15 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
   
   const [editingLink, setEditingLink] = React.useState<LinkType | null>(null)
   const [editingPortfolio, setEditingPortfolio] = React.useState<PortfolioItem | null>(null)
+  const [shopItems, setShopItems] = React.useState<ShopItem[]>([])
+  const [editingShopItem, setEditingShopItem] = React.useState<ShopItem | null>(null)
+  const [showAddShopItem, setShowAddShopItem] = React.useState(false)
+  const [shopItemTitle, setShopItemTitle] = React.useState("")
+  const [shopItemDescription, setShopItemDescription] = React.useState("")
+  const [shopItemPrice, setShopItemPrice] = React.useState<number | null>(null)
+  const [shopItemCurrency, setShopItemCurrency] = React.useState("USD")
+  const [shopItemImageUrl, setShopItemImageUrl] = React.useState("")
+  const [shopItemUrl, setShopItemUrl] = React.useState("")
   const [linkTitle, setLinkTitle] = React.useState("")
   const [linkUrl, setLinkUrl] = React.useState("")
   const [linkIcon, setLinkIcon] = React.useState("Link")
@@ -181,6 +200,7 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
     setMounted(true)
     setLinks(initialLinks)
     setPortfolioItems(initialPortfolioItems)
+    setShopItems(initialShopItems || [])
     setUsername(profile?.username || "")
     setBio(profile?.bio || "")
     setContactEmail(profile?.contact_email || "")
@@ -192,6 +212,7 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
     setUseCustomFont(profile?.use_custom_font ?? false)
     setShowLinks(profile?.show_links ?? true)
     setShowPortfolio(profile?.show_portfolio ?? false)
+    setShowShop(profile?.show_shop ?? false)
     
     // Set original profile for change tracking
     setOriginalProfile({
@@ -305,7 +326,7 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
     }
   }
 
-  const handleSectionToggleUpdate = async (field: 'show_links' | 'show_portfolio' | 'show_contact', value: boolean) => {
+  const handleSectionToggleUpdate = async (field: 'show_links' | 'show_portfolio' | 'show_contact' | 'show_shop', value: boolean) => {
     try {
       const { error } = await supabase
         .from("users")
@@ -318,6 +339,7 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
       if (field === 'show_links') setShowLinks(value)
       if (field === 'show_portfolio') setShowPortfolio(value)
       if (field === 'show_contact') setShowContact(value)
+      if (field === 'show_shop') setShowShop(value)
     } catch (error: any) {
       console.error("Error updating section visibility:", error.message)
     }
@@ -669,6 +691,152 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
     setShowAddPortfolio(false)
   }
 
+  // Shop management functions
+  const handleAddShopItem = async () => {
+    if (!shopItemTitle.trim()) return
+
+    setLoading(true)
+    try {
+      const newShopItem = {
+        user_id: user.id,
+        title: shopItemTitle,
+        description: shopItemDescription || null,
+        price: shopItemPrice,
+        currency: shopItemCurrency,
+        image_url: shopItemImageUrl || null,
+        product_url: shopItemUrl || null,
+        position: shopItems.length,
+      }
+
+      const tempId = Date.now().toString()
+      const tempItem = { ...newShopItem, id: tempId } as ShopItem
+      setShopItems([...shopItems, tempItem])
+
+      const { data, error } = await supabase
+        .from("shop_items")
+        .insert(newShopItem)
+        .select()
+        .single()
+
+      if (error) {
+        setShopItems(shopItems)
+        throw error
+      }
+
+      setShopItems(prevItems => prevItems.map(item => item.id === tempId ? data : item))
+      cancelShopItemEdit()
+    } catch (error: any) {
+      console.error("Error adding shop item:", error.message)
+      alert('Failed to add shop item: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateShopItem = async (updatedItem: ShopItem) => {
+    setLoading(true)
+    try {
+      setShopItems(shopItems.map(item => item.id === updatedItem.id ? updatedItem : item))
+
+      const { data, error } = await supabase
+        .from("shop_items")
+        .update({
+          title: updatedItem.title,
+          description: updatedItem.description,
+          price: updatedItem.price,
+          currency: updatedItem.currency,
+          image_url: updatedItem.image_url,
+          product_url: updatedItem.product_url,
+          position: updatedItem.position
+        })
+        .eq("id", updatedItem.id)
+        .select()
+        .single()
+
+      if (error) {
+        setShopItems(shopItems)
+        throw error
+      }
+
+      setShopItems(prevItems => prevItems.map(item => item.id === data.id ? data : item))
+    } catch (error: any) {
+      console.error("Error updating shop item:", error.message)
+      alert('Failed to update shop item: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditShopItem = async () => {
+    if (!editingShopItem || !shopItemTitle.trim()) return
+
+    setLoading(true)
+    try {
+      const updatedItem = {
+        ...editingShopItem,
+        title: shopItemTitle,
+        description: shopItemDescription || null,
+        price: shopItemPrice,
+        currency: shopItemCurrency,
+        image_url: shopItemImageUrl || null,
+        product_url: shopItemUrl || null,
+      }
+      await handleUpdateShopItem(updatedItem)
+      cancelShopItemEdit()
+    } catch (error: any) {
+      console.error("Error updating shop item:", error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteShopItem = async (id: string) => {
+    setLoading(true)
+    try {
+      const itemToDelete = shopItems.find(item => item.id === id)
+      
+      const { error } = await supabase
+        .from("shop_items")
+        .delete()
+        .eq("id", id)
+
+      if (error) throw error
+
+      // Delete the associated image if it exists
+      if (itemToDelete?.image_url) {
+        await deletePortfolioImage(itemToDelete.image_url)
+      }
+
+      setShopItems(shopItems.filter(item => item.id !== id))
+    } catch (error: any) {
+      console.error("Error deleting shop item:", error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startEditShopItem = (item: ShopItem) => {
+    setEditingShopItem(item)
+    setShopItemTitle(item.title)
+    setShopItemDescription(item.description || "")
+    setShopItemPrice(item.price)
+    setShopItemCurrency(item.currency)
+    setShopItemImageUrl(item.image_url || "")
+    setShopItemUrl(item.product_url || "")
+    setShowAddShopItem(true)
+  }
+
+  const cancelShopItemEdit = () => {
+    setEditingShopItem(null)
+    setShopItemTitle("")
+    setShopItemDescription("")
+    setShopItemPrice(null)
+    setShopItemCurrency("USD")
+    setShopItemImageUrl("")
+    setShopItemUrl("")
+    setShowAddShopItem(false)
+  }
+
   // Don't render until after mount to prevent hydration mismatch
   if (!mounted) {
     return null
@@ -914,6 +1082,26 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
                     onCheckedChange={(value) => {
                       setShowPortfolio(value)
                       handleSectionToggleUpdate('show_portfolio', value)
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
+                      <Label htmlFor="show-shop" className="font-medium">Shop Section</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show your products and services on your profile
+                    </p>
+                  </div>
+                  <Switch
+                    id="show-shop"
+                    checked={showShop}
+                    onCheckedChange={(value) => {
+                      setShowShop(value)
+                      handleSectionToggleUpdate('show_shop', value)
                     }}
                   />
                 </div>
@@ -1175,6 +1363,247 @@ export default function DashboardClient({ user, profile, initialLinks, initialPo
               </Card>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Shop Management */}
+          {showShop && (
+            <AccordionItem value="shop">
+              <AccordionTrigger className="text-xl font-semibold">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-5 w-5" />
+                  Your Shop
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardDescription>
+                        Manage your products and services
+                      </CardDescription>
+                      <Button
+                        onClick={() => setShowAddShopItem(true)}
+                        disabled={showAddShopItem}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Product
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Add/Edit Shop Item Form */}
+                    {showAddShopItem && (
+                      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                {editingShopItem ? (
+                                  <>
+                                    <Settings className="h-5 w-5" />
+                                    Edit Product
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="h-5 w-5" />
+                                    Add New Product
+                                  </>
+                                )}
+                              </CardTitle>
+                              <CardDescription className="mt-1">
+                                {editingShopItem 
+                                  ? "Update your product details"
+                                  : "Add a new product to your shop"
+                                }
+                              </CardDescription>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={cancelShopItemEdit}
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="shop-item-title" className="text-sm font-medium">
+                                Product Title
+                              </Label>
+                              <Input
+                                id="shop-item-title"
+                                value={shopItemTitle}
+                                onChange={(e) => setShopItemTitle(e.target.value)}
+                                placeholder="e.g., Custom Design Package, Digital Download..."
+                                className="h-10"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="shop-item-description" className="text-sm font-medium">
+                                Description
+                              </Label>
+                              <Textarea
+                                id="shop-item-description"
+                                value={shopItemDescription}
+                                onChange={(e) => setShopItemDescription(e.target.value)}
+                                placeholder="Describe your product or service..."
+                                className="min-h-[80px]"
+                              />
+                            </div>
+                            
+                            <div className="grid md:grid-cols-2 gap-6">
+                              <div className="space-y-2">
+                                <Label htmlFor="shop-item-price" className="text-sm font-medium">
+                                  Price
+                                </Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    id="shop-item-price"
+                                    type="number"
+                                    value={shopItemPrice === null ? '' : shopItemPrice}
+                                    onChange={(e) => setShopItemPrice(e.target.value ? parseFloat(e.target.value) : null)}
+                                    placeholder="0.00"
+                                    className="h-10"
+                                  />
+                                  <select
+                                    value={shopItemCurrency}
+                                    onChange={(e) => setShopItemCurrency(e.target.value)}
+                                    className="h-10 rounded-md border bg-background px-3"
+                                  >
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="CAD">CAD</option>
+                                    <option value="AUD">AUD</option>
+                                    <option value="JPY">JPY</option>
+                                  </select>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="shop-item-url" className="text-sm font-medium">
+                                  Product URL (Optional)
+                                </Label>
+                                <Input
+                                  id="shop-item-url"
+                                  value={shopItemUrl}
+                                  onChange={(e) => setShopItemUrl(e.target.value)}
+                                  placeholder="https://your-store.com/product"
+                                  className="h-10"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">
+                                Product Image
+                              </Label>
+                              <PortfolioImageUpload
+                                userId={user.id}
+                                currentImageUrl={shopItemImageUrl}
+                                onImageUpdate={(url) => setShopItemImageUrl(url || "")}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Preview */}
+                          {shopItemTitle.trim() && (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="h-px bg-border flex-1" />
+                                <span className="text-xs text-muted-foreground font-medium px-3">PREVIEW</span>
+                                <div className="h-px bg-border flex-1" />
+                              </div>
+                              <ShopItemCard
+                                item={{
+                                  id: "preview",
+                                  title: shopItemTitle,
+                                  description: shopItemDescription || null,
+                                  price: shopItemPrice,
+                                  currency: shopItemCurrency,
+                                  image_url: shopItemImageUrl || null,
+                                  product_url: shopItemUrl || null,
+                                }}
+                                className="pointer-events-none"
+                              />
+                            </div>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex items-center justify-between pt-2">
+                            <div className="text-xs text-muted-foreground">
+                              {!shopItemTitle.trim() ? (
+                                "Please add a product title to continue"
+                              ) : (
+                                "Ready to save your product!"
+                              )}
+                            </div>
+                            <div className="flex gap-3">
+                              <Button 
+                                variant="outline" 
+                                onClick={cancelShopItemEdit}
+                                className="min-w-[80px]"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={editingShopItem ? handleEditShopItem : handleAddShopItem}
+                                disabled={loading || !shopItemTitle.trim()}
+                                className="min-w-[120px]"
+                              >
+                                {loading ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                    Saving...
+                                  </>
+                                ) : editingShopItem ? (
+                                  <>
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Update Product
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Product
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Shop Items Grid */}
+                    {shopItems.length > 0 ? (
+                      <div className="space-y-3">
+                        {shopItems.map((item) => (
+                          <div key={item.id} className="relative group">
+                            <ShopItemCard
+                              item={item}
+                              onEdit={(item) => startEditShopItem(item as ShopItem)}
+                              onDelete={() => handleDeleteShopItem(item.id)}
+                              showControls={true}
+                              isBeingEdited={editingShopItem?.id === item.id}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Tag className="h-16 w-16 mx-auto mb-6 opacity-50" />
+                        <p className="text-lg font-medium mb-2">No products added yet</p>
+                        <p className="text-sm">Click &quot;Add Product&quot; to start selling!</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
           {/* Portfolio Management */}
           {showPortfolio && (

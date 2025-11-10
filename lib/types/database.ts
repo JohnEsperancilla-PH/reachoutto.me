@@ -10,6 +10,7 @@ export interface Database {
           is_admin: boolean
           show_links: boolean
           show_portfolio: boolean
+          show_shop: boolean
           verified: boolean
           created_at: string
           contact_email: string | null
@@ -28,6 +29,7 @@ export interface Database {
           is_admin?: boolean
           show_links?: boolean
           show_portfolio?: boolean
+          show_shop?: boolean
           verified?: boolean
           created_at?: string
           contact_email?: string | null
@@ -46,6 +48,7 @@ export interface Database {
           is_admin?: boolean
           show_links?: boolean
           show_portfolio?: boolean
+          show_shop?: boolean
           verified?: boolean
           created_at?: string
           contact_email?: string | null
@@ -121,6 +124,44 @@ export interface Database {
           created_at?: string
         }
       }
+      shop_items: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          price: number | null
+          currency: string
+          image_url: string | null
+          product_url: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          price?: number | null
+          currency?: string
+          image_url?: string | null
+          product_url?: string | null
+          position: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          price?: number | null
+          currency?: string
+          image_url?: string | null
+          product_url?: string | null
+          position?: number
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -140,3 +181,4 @@ export interface Database {
 export type User = Database['public']['Tables']['users']['Row']
 export type Link = Database['public']['Tables']['links']['Row']
 export type PortfolioItem = Database['public']['Tables']['portfolio_items']['Row']
+export type ShopItem = Database['public']['Tables']['shop_items']['Row']

@@ -81,11 +81,19 @@ export default async function ProfilePage({ params }: { params: { username: stri
     .eq("user_id", user.id)
     .order("position")
 
+  // Get user shop items
+  const { data: shopItems } = await supabase
+    .from("shop_items")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("position")
+
   return (
     <PublicProfile 
       user={user} 
       links={links || []} 
       portfolioItems={portfolioItems || []}
+      shopItems={shopItems || []}
     />
   )
 }

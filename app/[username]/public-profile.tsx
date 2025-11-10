@@ -9,21 +9,24 @@ import PortfolioCard from "@/components/portfolio-card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ProfileQRCode } from "@/components/profile-qr-code"
 import { ProfileShareModal } from "@/components/profile-share-modal"
-import { Link as LinkIcon, Coffee, Briefcase, CheckCircle, Mail, Phone } from "lucide-react"
-import type { User, Link as LinkType, PortfolioItem } from "@/lib/types/database"
+import { Link as LinkIcon, Coffee, Briefcase, CheckCircle, Mail, Phone, Tag } from "lucide-react"
+import type { User, Link as LinkType, PortfolioItem, ShopItem } from "@/lib/types/database"
+import ShopItemCard from "@/components/shop-item-card"
 
 interface PublicProfileProps {
   user: User
   links: LinkType[]
   portfolioItems: PortfolioItem[]
+  shopItems: ShopItem[]
 }
 
-export default function PublicProfile({ user, links, portfolioItems }: PublicProfileProps) {
-  const [activeSection, setActiveSection] = useState<'links' | 'portfolio'>('links')
+export default function PublicProfile({ user, links, portfolioItems, shopItems }: PublicProfileProps) {
+  const [activeSection, setActiveSection] = useState<'links' | 'portfolio' | 'shop'>('links')
 
   // Determine which sections are available
   const hasLinks = user.show_links && links.length > 0
   const hasPortfolio = user.show_portfolio && portfolioItems.length > 0
+  const hasShop = user.show_shop && shopItems.length > 0
   
   // Set default active section based on what's available
   useEffect(() => {
@@ -31,8 +34,10 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
       setActiveSection('links')
     } else if (hasPortfolio) {
       setActiveSection('portfolio')
+    } else if (hasShop) {
+      setActiveSection('shop')
     }
-  }, [hasLinks, hasPortfolio])
+  }, [hasLinks, hasPortfolio, hasShop])
 
   // Check if custom background is enabled
   const hasCustomBackground = user.use_custom_background && user.custom_background
@@ -49,6 +54,13 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
   const fontStyle = hasCustomFont && user.custom_font
     ? { fontFamily: user.custom_font }
     : undefined
+
+  // Track product clicks for analytics
+  const handleProductClick = async (url: string | null, shopItemId: string) => {
+    if (!url) return
+    const fullUrl = url.startsWith("http") ? url : `https://${url}`
+    window.open(fullUrl, "_blank", "noopener,noreferrer")
+  }
 
   const containerClass = hasCustomBackground
     ? "min-h-screen"
@@ -182,35 +194,52 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
           {/* Content Section */}
           <div className="space-y-6 sm:space-y-8">
             {/* Section Toggle (only show if both sections are available) */}
-            {hasLinks && hasPortfolio && (
+            {/* Section Toggle */}
+            {(hasLinks || hasPortfolio || hasShop) && ([hasLinks, hasPortfolio, hasShop].filter(Boolean).length > 1) && (
               <div className="flex items-center justify-center">
                 <div className={`flex items-center rounded-full p-1.5 shadow-sm ${textColorClasses.sectionContainer}`}>
-                  <button
-                    onClick={() => setActiveSection('links')}
-                    className={`px-6 py-2.5 text-sm font-medium rounded-full ${
-                      activeSection === 'links'
-                        ? textColorClasses.buttonActive
-                        : textColorClasses.button
-                    }`}
-                  >
-                    Links
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('portfolio')}
-                    className={`px-6 py-2.5 text-sm font-medium rounded-full ${
-                      activeSection === 'portfolio'
-                        ? textColorClasses.buttonActive
-                        : textColorClasses.button
-                    }`}
-                  >
-                    Portfolio
-                  </button>
+                  {hasLinks && (
+                    <button
+                      onClick={() => setActiveSection('links')}
+                      className={`px-6 py-2.5 text-sm font-medium rounded-full ${
+                        activeSection === 'links'
+                          ? textColorClasses.buttonActive
+                          : textColorClasses.button
+                      }`}
+                    >
+                      Links
+                    </button>
+                  )}
+                  {hasPortfolio && (
+                    <button
+                      onClick={() => setActiveSection('portfolio')}
+                      className={`px-6 py-2.5 text-sm font-medium rounded-full ${
+                        activeSection === 'portfolio'
+                          ? textColorClasses.buttonActive
+                          : textColorClasses.button
+                      }`}
+                    >
+                      Portfolio
+                    </button>
+                  )}
+                  {hasShop && (
+                    <button
+                      onClick={() => setActiveSection('shop')}
+                      className={`px-6 py-2.5 text-sm font-medium rounded-full ${
+                        activeSection === 'shop'
+                          ? textColorClasses.buttonActive
+                          : textColorClasses.button
+                      }`}
+                    >
+                      Shop
+                    </button>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Links Content */}
-            {(activeSection === 'links' || (!hasPortfolio && hasLinks)) && (
+            {activeSection === 'links' && (
               <div className="space-y-3 sm:space-y-4">
                 {links.length > 0 ? (
                   links.map((link) => (
@@ -233,7 +262,7 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
             )}
 
             {/* Portfolio Content */}
-            {(activeSection === 'portfolio' || (!hasLinks && hasPortfolio)) && (
+            {activeSection === 'portfolio' && (
               <div className="space-y-6">
                 {portfolioItems.length > 0 ? (
                   <div className="grid gap-6">
@@ -250,6 +279,36 @@ export default function PublicProfile({ user, links, portfolioItems }: PublicPro
                   <div className={`text-center py-12 sm:py-16 ${textColorClasses.muted}`}>
                     <Briefcase className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-6 opacity-50" />
                     <p className="text-base sm:text-lg font-medium mb-2">No projects added yet</p>
+                    <p className="text-sm sm:text-base">Check back later for updates!</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Shop Content */}
+            {activeSection === 'shop' && (
+              <div className="space-y-3 sm:space-y-4">
+                {shopItems.length > 0 ? (
+                  shopItems.map((item) => (
+                    <ShopItemCard
+                      key={item.id}
+                      item={{
+                        id: item.id,
+                        title: item.title,
+                        description: item.description,
+                        price: item.price,
+                        currency: item.currency,
+                        image_url: item.image_url,
+                        product_url: item.product_url
+                      }}
+                      className="active:scale-[0.98]"
+                      customTheme={!!hasCustomBackground}
+                    />
+                  ))
+                ) : (
+                  <div className={`text-center py-12 sm:py-16 ${textColorClasses.muted}`}>
+                    <Tag className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-6 opacity-50" />
+                    <p className="text-base sm:text-lg font-medium mb-2">No products added yet</p>
                     <p className="text-sm sm:text-base">Check back later for updates!</p>
                   </div>
                 )}
